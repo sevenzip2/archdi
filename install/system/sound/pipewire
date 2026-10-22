@@ -1,0 +1,42 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("pipewire" "Audio and video server" on)
+options+=("wireplumber" "Session manager" on)
+options+=("pipewire-alsa" "" on)
+options+=("pipewire-jack" "" on)
+options+=("pipewire-pulse" "" on)
+options+=("pipewire-v4l2" "" on)
+options+=("pipewire-zeroconf" "" on)
+options+=("gst-plugin-pipewire" "" on)
+if grep -q '^\[multilib\]' /etc/pacman.conf; then
+  options+=("lib32-pipewire" "32-bit (Steam, Wine)" on)
+fi
+# Recent laptops (Intel/AMD) need the Sound Open Firmware for internal audio
+if ls /sys/class/power_supply/BAT* &>/dev/null; then
+  options+=("sof-firmware" "Laptop audio firmware" on)
+else
+  options+=("sof-firmware" "Laptop audio firmware" off)
+fi
+options+=("alsa-utils" "alsamixer" on)
+options+=("pavucontrol" "Volume control" off)
+options+=("easyeffects" "" off)
+options+=("pipewire-x11-bell" "" off)
+
+sel=$(dialog --backtitle "$apptitle" --title "PipeWire Install" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  case $itm in
+    *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
+  esac
+done
+
+instpkg "$pkg" "$aurpkg"
+
+exit 0

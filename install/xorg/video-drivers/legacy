@@ -1,0 +1,23 @@
+#!/bin/bash
+. ./lib
+
+options=()
+items=$(pacman -Ssq xf86-video)
+for item in $items; do
+  options+=("$item" "" off)
+done
+
+sel=$(dialog --backtitle "$apptitle" --title "Legacy Xorg drivers :" --cancel-button "Back" --checklist "Mesa and the modesetting driver cover most GPUs, these are rarely needed :" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  pkg="$pkg $(echo $itm | sed 's/"//g')"
+done
+
+instpkg "$pkg" "$aurpkg"
+
+exit 0

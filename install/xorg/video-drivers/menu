@@ -2,11 +2,12 @@
 . ./lib
 
 options=()
-options+=("Open Source" "")
-options+=("Proprietary" "")
+options+=("Open Source" "Mesa, Vulkan, VA-API (AMD, Intel, nouveau)")
+options+=("Proprietary" "NVIDIA, VirtualBox")
+options+=("Legacy" "xf86-video Xorg drivers, rarely needed")
 
 defaultitem=""
-sel=$(dialog --backtitle "$apptitle" --title "XOrg Install Menu" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \
+sel=$(dialog --backtitle "$apptitle" --title "Video Drivers Menu" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \
   "${options[@]}" \
   3>&1 1>&2 2>&3)
 if [ ! "$?" = "0" ]; then
@@ -17,6 +18,7 @@ sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 case $sel in
   'Open Source') script install/xorg/video-drivers/open-source;;
   'Proprietary') script install/xorg/video-drivers/proprietary;;
+  'Legacy') script install/xorg/video-drivers/legacy;;
 esac
 
 exit 0

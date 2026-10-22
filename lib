@@ -187,6 +187,21 @@ editfile(){
 }
 
 
+# Enable the [multilib] repository (32-bit packages : steam, wine, lib32-*)
+enablemultilib(){
+  if grep -q '^\[multilib\]' /etc/pacman.conf; then
+    return 0
+  fi
+  if (confirm "32-bit packages need the multilib repository.\n\nUncomment [multilib] in /etc/pacman.conf and run pacman -Syu ?") then
+    clear
+    sed -i '/^#\[multilib\]/{s/^#//;n;s/^#//}' /etc/pacman.conf
+    pacman -Syu
+    return 0
+  fi
+  return 1
+}
+
+
 # $1 : user name
 validusername(){
   [[ "$1" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]]
@@ -292,6 +307,24 @@ svcenable(){
   #else
   #  exit 1
   fi
+}
+
+# $1 : display manager service
+# $2 : [displayname]
+# Only one display-manager.service can be enabled, disable the current one first
+dmenable(){
+  current=$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)
+  current=${current##*/}
+  if [ ! "$current" = "" ]&&[ ! "$current" = "$1.service" ]&&[ ! "$current" = "$1" ]; then
+    if (confirm "$current is the current display manager.\n\nReplace it with $1 ?") then
+      clear
+      echo "systemctl disable $current"
+      systemctl disable $current
+    else
+      return 1
+    fi
+  fi
+  svcenable $1 "$2"
 }
 
 # $1 : servicename

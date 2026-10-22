@@ -4,12 +4,14 @@
 options=()
 options+=("xorg-server" "" on)
 options+=("xorg-xinit" "" on)
+options+=("xorg-xwayland" "X11 apps on Wayland" on)
 
 items=$(pacman -Ssq xorg-)
 for item in $items; do
   case $item in
     "xorg-server") ;;
     "xorg-xinit") ;;
+    "xorg-xwayland") ;;
     *)
       if [ ! "$(echo $item | cut -d '-' -f 1)" = "xf86" ]; then
         options+=("$item" "" off)
@@ -18,7 +20,7 @@ for item in $items; do
   esac
 done
 
-sel=$(dialog --backtitle "$apptitle" --title "XOrg packages :" --cancel-button "Back" --checklist "" 0 0 0 \
+sel=$(dialog --backtitle "$apptitle" --title "Xorg / Xwayland packages :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \
   3>&1 1>&2 2>&3)
 if [ ! "$?" = "0" ]; then

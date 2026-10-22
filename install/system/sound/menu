@@ -2,9 +2,8 @@
 . ./lib
 
 options=()
-options+=("wireplumper" "(modern)")
+options+=("pipewire" "PipeWire + WirePlumber (recommended)")
 options+=("pulseaudio" "(legacy)")
-options+=("pipewire-media-session" "(deprecated, use wireplumper)")
 
 defaultitem=""
 sel=$(dialog --backtitle "$apptitle" --title "System Sound Menu :" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \

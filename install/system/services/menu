@@ -4,10 +4,25 @@
 options=()
 options+=("networkmanager" "Network Management" on)
 options+=("openssh" "Server SSH" on)
-options+=("cronie" "Cron tasks server" on)
+options+=("cronie" "Cron tasks server" off)
 options+=("xdg-user-dirs" "Create user directories" on)
 options+=("numlockon" "numlock on on tty" on)
-options+=("haveged" "Antropy generator" on)
+options+=("systemd-timesyncd" "Time synchronization (NTP client)" on)
+# fstrim is useful when the system has SSD/NVMe drives
+if [ "$(lsblk -dno ROTA 2>/dev/null | grep -c 0)" != "0" ]; then
+  options+=("fstrim" "Weekly SSD trim (fstrim.timer)" on)
+else
+  options+=("fstrim" "Weekly SSD trim (fstrim.timer)" off)
+fi
+options+=("pacman-contrib" "Weekly package cache cleanup (paccache.timer)" on)
+options+=("reflector" "Weekly mirrorlist refresh (reflector.timer)" off)
+# Laptops : power profiles (balanced, power-saver, performance)
+if ls /sys/class/power_supply/BAT* &>/dev/null; then
+  options+=("power-profiles-daemon" "Power profiles (laptop)" on)
+else
+  options+=("power-profiles-daemon" "Power profiles (laptop)" off)
+fi
+options+=("fwupd" "Firmware updates (fwupdmgr)" off)
 if grep -q GenuineIntel /proc/cpuinfo; then
   options+=("intel-ucode" "Intel microcode" on)
 else
@@ -18,20 +33,16 @@ if grep -q AuthenticAMD /proc/cpuinfo; then
 else
   options+=("amd-ucode" "AMD microcode" off)
 fi
+if ls /sys/class/bluetooth/hci* &>/dev/null; then
+  options+=("bluez" "Bluetooth" on)
+  options+=("bluez-utils" "bluetoothctl" on)
+else
+  options+=("bluez" "Bluetooth" off)
+  options+=("bluez-utils" "bluetoothctl" off)
+fi
 options+=("net-snmp" "SNMP Server" off)
 options+=("samba" "Server SMB" off)
-if ls /sys/class/bluetooth/hci* &>/dev/null; then
-  options+=("bluez" "" on)
-  options+=("bluez-libs" "" on)
-else
-  options+=("bluez" "" off)
-  options+=("bluez-libs" "" off)
-fi
-options+=("syslog-ng" "" off)
 options+=("pkgstats" "" off)
-options+=("ntp" "" off)
-#options+=("rsyslog" "" off)
-#options+=("systemd-readahead" "(AUR) boot improvement" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Services Install" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \
@@ -42,8 +53,9 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "numlockon") ;;
-    "systemd-readahead") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    "numlockon" | \
+    "systemd-timesyncd" | \
+    "fstrim") ;;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done
@@ -68,20 +80,25 @@ for itm in $sel; do
     "bluez")
       svcenable bluetooth "Bluetooth Service"
     ;;
-    "ntp")
-      svcenable ntpd "NTP Server"
+    "systemd-timesyncd")
+      clear
+      echo "timedatectl set-ntp true"
+      timedatectl set-ntp true
+      pressanykey
+    ;;
+    "fstrim")
+      svcenable fstrim.timer "Weekly SSD trim"
+    ;;
+    "pacman-contrib")
+      svcenable paccache.timer "Weekly package cache cleanup"
+    ;;
+    "reflector")
+      svcenable reflector.timer "Weekly mirrorlist refresh (/etc/xdg/reflector/reflector.conf)"
+    ;;
+    "power-profiles-daemon")
+      svcenable power-profiles-daemon "Power profiles"
     ;;
     "numlockon") script install/system/services/numlockon;;
-    "haveged")
-			svcenable haveged "Haveged"
-    ;;
-    "syslog-ng")
-      #echo "ForwardToSyslog=yes" >> /etc/systemd/journald.conf
-      systemctl enable syslog-ng@default
-    ;;
-    "rsyslog")
-      systemctl enable rsyslog
-    ;;
     "net-snmp")
       if (confirm "Create and edit /etc/snmp/snmpd.conf ?") then
         mkdir /etc/snmp > /dev/null
@@ -104,9 +121,6 @@ for itm in $sel; do
         editfile /var/net-snmp/snmpd.conf
       fi
       svcenable snmpd "SNMP Server"
-    ;;
-    "systemd-readahead")
-      svcenable systemd-readahead
     ;;
   esac
 done

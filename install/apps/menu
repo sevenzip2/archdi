@@ -10,7 +10,8 @@ options+=("Graphic" "")
 options+=("Dev" "")
 options+=("System" "")
 options+=("PacMan GUI" "")
-#options+=("Games" "")
+options+=("Flatpak" "Flatpak, Flathub")
+options+=("Games" "Steam, gamemode, Lutris...")
 
 
 defaultitem=""
@@ -30,6 +31,8 @@ case $sel in
   "Dev") script install/apps/dev/dev;;
   "System") script install/apps/system/system;;
   "PacMan GUI") script install/apps/pacmangui/pacmangui;;
+  "Flatpak") script install/apps/flatpak;;
+  "Games") script install/apps/games;;
 esac
 
 exit 0

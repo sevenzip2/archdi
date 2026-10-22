@@ -24,7 +24,7 @@ instpkg "$pkg" "$aurpkg"
 
 for itm in $sel; do
   case $itm in
-    "lxdm") svcenable lxdm;;
+    "lxdm") dmenable lxdm;;
   esac
 done
 

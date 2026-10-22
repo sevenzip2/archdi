@@ -1,13 +1,48 @@
 #!/bin/bash
 . ./lib
 
-options=()
-items=$(pacman -Ssq xf86-video)
-for item in $items; do
-  options+=("$item" "" off)
-done
+# GPU vendors from sysfs (works without pciutils)
+vendors=$(cat /sys/class/drm/card*/device/vendor 2>/dev/null | sort -u)
+gpu(){
+  echo "$vendors" | grep -q "$1" && echo on || echo off
+}
+amd=$(gpu 0x1002)
+intel=$(gpu 0x8086)
+nvidia=$(gpu 0x10de)
+virtio=$(gpu 0x1af4)
+multilib=0
+if grep -q '^\[multilib\]' /etc/pacman.conf; then
+  multilib=1
+fi
 
-sel=$(dialog --backtitle "$apptitle" --title "XOrg video drivers :" --cancel-button "Back" --checklist "Choose video drivers for your system :" 0 0 0 \
+options=()
+options+=("mesa" "OpenGL, VA-API, VDPAU (all GPUs)" on)
+options+=("vulkan-radeon" "AMD Vulkan" $amd)
+options+=("vulkan-intel" "Intel Vulkan" $intel)
+options+=("intel-media-driver" "Intel VA-API, Broadwell and newer" $intel)
+options+=("libva-intel-driver" "Intel VA-API, older than Broadwell" off)
+options+=("vpl-gpu-rt" "Intel Quick Sync (oneVPL)" off)
+options+=("vulkan-nouveau" "NVIDIA open source Vulkan (NVK)" off)
+options+=("vulkan-virtio" "Virtual machine Vulkan (virtio-gpu)" $virtio)
+if [ "$multilib" = "1" ]; then
+  options+=("lib32-mesa" "32-bit (Steam, Wine)" off)
+  options+=("lib32-vulkan-radeon" "32-bit AMD Vulkan" off)
+  options+=("lib32-vulkan-intel" "32-bit Intel Vulkan" off)
+  options+=("lib32-vulkan-nouveau" "32-bit NVK" off)
+fi
+options+=("mesa-utils" "glxinfo, eglinfo" off)
+options+=("vulkan-tools" "vulkaninfo" off)
+options+=("libva-utils" "vainfo" off)
+
+msg="Detected GPU vendors : $(echo $vendors)"
+if [ "$nvidia" = "on" ]; then
+  msg="$msg\nNVIDIA : the proprietary menu (nvidia-open) is recommended."
+fi
+if [ "$multilib" = "0" ]; then
+  msg="$msg\n32-bit drivers are hidden, enable multilib for Steam/Wine."
+fi
+
+sel=$(dialog --backtitle "$apptitle" --title "Open source video drivers :" --cancel-button "Back" --checklist "$msg" 0 0 0 \
   "${options[@]}" \
   3>&1 1>&2 2>&3)
 if [ ! "$?" = "0" ]; then

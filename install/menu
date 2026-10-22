@@ -4,7 +4,7 @@
 options=()
 options+=("Console" "")
 options+=("System" "")
-options+=("XOrg" "")
+options+=("Graphics" "Xorg, Xwayland, drivers, fonts")
 options+=("Desktop Environment" "")
 options+=("Display Manager" "")
 options+=("Input Method" "Korean (fcitx5, ibus, kime, nimf, uim)")
@@ -22,7 +22,7 @@ sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 case $sel in
   "Console") menu install/console/menu;;
   "System") menu install/system/menu;;
-  "XOrg") menu install/xorg/menu;;
+  "Graphics") menu install/xorg/menu;;
   "Display Manager") menu install/displaymngr/menu;;
   "Input Method") menu install/inputmethod/menu;;
   "Desktop Environment") menu install/desktop/menu;;

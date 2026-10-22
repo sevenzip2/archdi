@@ -29,7 +29,7 @@ instpkg "$pkg" "$aurpkg"
 for itm in $sel; do
   case $itm in
     "sddm-kcm")
-      svcenable sddm
+      dmenable sddm
     ;;
   esac
 done

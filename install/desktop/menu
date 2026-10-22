@@ -6,6 +6,10 @@ options+=("Plasma" "KDE Plasma 6")
 options+=("XFCE4" "(Help Wanted)")
 options+=("Gnome" "(Help Wanted)")
 options+=("Cinnamon" "By FredBezies")
+options+=("COSMIC" "Wayland desktop by System76")
+options+=("Hyprland" "Wayland tiling compositor")
+options+=("Sway" "Wayland i3-like compositor")
+options+=("niri" "Wayland scrollable tiling compositor")
 options+=("LXDE" "(Help Wanted)")
 options+=("LXQt" "(Help Wanted)")
 options+=("Mate" "(By FredBezies)")
@@ -29,6 +33,10 @@ case $sel in
   'XFCE4') menu install/desktop/xfce4/menu;;
   'Gnome') menu install/desktop/gnome/menu;;
   'Cinnamon') menu install/desktop/cinnamon/menu;;
+  'COSMIC') script install/desktop/cosmic/packages;;
+  'Hyprland') script install/desktop/hyprland/packages;;
+  'Sway') script install/desktop/sway/packages;;
+  'niri') script install/desktop/niri/packages;;
   'LXDE') script install/desktop/lxde/packages;;
   'LXQt') menu install/desktop/lxqt/menu;;
   'Mate') menu install/desktop/mate/menu;;

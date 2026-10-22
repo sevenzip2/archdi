@@ -1,0 +1,78 @@
+#!/bin/bash
+. ./lib
+
+# $@ : command, displayed then run
+run(){
+  echo "$*"
+  "$@"
+}
+
+rootfs=$(findmnt -no FSTYPE /)
+
+options=()
+if [ "$rootfs" = "btrfs" ]; then
+  options+=("snapper" "snapper + snap-pac + btrfs-assistant (btrfs)")
+fi
+options+=("timeshift" "Timeshift (btrfs @ / @home layout, or rsync)")
+
+sel=$(dialog --backtitle "$apptitle" --title "System Snapshots :" --cancel-button "Back" --menu "Root file system : $rootfs" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+case $sel in
+  snapper)
+    pkg="snapper snap-pac btrfs-assistant"
+    if [ -f /boot/grub/grub.cfg ]; then
+      # Boot snapshots from the GRUB menu
+      pkg="$pkg grub-btrfs inotify-tools"
+    fi
+    instpkg "$pkg" ""
+    clear
+    if [ ! -f /etc/snapper/configs/root ]; then
+      if mountpoint -q /.snapshots; then
+        # archfi layout : @snapshots is mounted on /.snapshots, snapper wants to create its own
+        # subvolume there, create the config then put @snapshots back
+        run umount /.snapshots
+        run rmdir /.snapshots
+        run snapper -c root create-config /
+        run btrfs subvolume delete /.snapshots
+        run mkdir /.snapshots
+        run mount /.snapshots
+      else
+        run snapper -c root create-config /
+      fi
+      run chmod 750 /.snapshots
+    else
+      echo "/etc/snapper/configs/root already exists"
+    fi
+    pressanykey
+    if (confirm "Edit /etc/snapper/configs/root ?\n\n(TIMELINE_LIMIT_* sets how many hourly/daily/... snapshots are kept)") then
+      editfile /etc/snapper/configs/root
+    fi
+    svcenable snapper-timeline.timer "Hourly snapshots"
+    svcenable snapper-cleanup.timer "Old snapshots cleanup"
+    if [ -f /usr/bin/grub-btrfsd ]; then
+      svcenable grub-btrfsd "GRUB snapshots menu"
+      clear
+      run grub-mkconfig -o /boot/grub/grub.cfg
+      pressanykey
+    fi
+    dialog --backtitle "$apptitle" --title "snapper" --msgbox "snap-pac takes a snapshot before and after each pacman transaction.\n\nManage and restore snapshots with btrfs-assistant." 0 0
+  ;;
+  timeshift)
+    # Scheduled snapshots of timeshift run from cron
+    instpkg "timeshift cronie" ""
+    svcenable cronie
+    if [ "$rootfs" = "btrfs" ]; then
+      msg="Timeshift btrfs mode needs the root in @ and home in @home (archfi layout)."
+    else
+      msg="Timeshift uses rsync mode on $rootfs, choose a snapshot location with enough space."
+    fi
+    dialog --backtitle "$apptitle" --title "Timeshift" --msgbox "$msg\n\nConfigure the schedule with : sudo timeshift-gtk (or timeshift --help)." 0 0
+  ;;
+esac
+
+exit 0

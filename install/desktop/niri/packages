@@ -1,0 +1,45 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("niri" "Scrollable tiling compositor" on)
+options+=("xwayland-satellite" "X11 apps support" on)
+options+=("xdg-desktop-portal-gnome" "Screen sharing portal" on)
+options+=("polkit-gnome" "Polkit agent" on)
+options+=("alacritty" "Default terminal" on)
+options+=("fuzzel" "Default app launcher" on)
+options+=("waybar" "Status bar" on)
+options+=("mako" "Notifications" on)
+options+=("swaybg" "Wallpaper" on)
+options+=("swaylock" "Screen locker" on)
+options+=("swayidle" "Idle daemon" on)
+options+=("grim" "Screenshot" on)
+options+=("slurp" "Region selection for grim" on)
+options+=("wl-clipboard" "Clipboard tools" on)
+options+=("brightnessctl" "Backlight control" on)
+options+=("network-manager-applet" "Network tray applet" on)
+options+=("pavucontrol" "Volume control" on)
+options+=("xdg-desktop-portal-gtk" "File chooser portal" on)
+options+=("nwg-look" "GTK theme settings" off)
+options+=("qt6ct" "Qt6 theme settings" off)
+
+sel=$(dialog --backtitle "$apptitle" --title "niri Install :" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  pkg="$pkg $(echo $itm | sed 's/"//g')"
+done
+
+instpkg "$pkg" "$aurpkg"
+
+clear
+echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"
+echo "  niri-session"
+echo "A default config is created in ~/.config/niri/config.kdl at first start."
+pressanykey
+
+exit 0
