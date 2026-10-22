@@ -41,6 +41,11 @@ for itm in $sel; do
   esac
 done
 
+# 32-bit libraries come from multilib, which a new install has disabled
+if [[ " $pkg " == *" lib32-nvidia-utils "* ]]&&! enablemultilib; then
+  pkg=$(echo " $pkg " | sed 's/ lib32-nvidia-utils / /')
+fi
+
 # DKMS builds the module for every installed kernel, the headers are only optional dependencies of dkms
 if [[ " $pkg $aurpkg " == *"-dkms "* ]]; then
   for pkgbase in /usr/lib/modules/*/pkgbase; do

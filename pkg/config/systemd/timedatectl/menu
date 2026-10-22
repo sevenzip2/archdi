@@ -1,12 +1,22 @@
 #!/bin/bash
 . ./lib
 
+# timedatectl needs the running systemd of the system, not available from archfi (chroot):
+# there the NTP client (systemd-timesyncd) is enabled or disabled for the next boot
 options=()
-timedatectl status | grep inactive> /dev/null
-if [ "$?" = "0" ]; then
-  options+=("Enable" "timedatectl set-ntp true")
+if inchroot; then
+  if systemctl is-enabled -q systemd-timesyncd 2>/dev/null; then
+    options+=("Disable" "systemctl disable systemd-timesyncd")
+  else
+    options+=("Enable" "systemctl enable systemd-timesyncd")
+  fi
 else
-  options+=("Disable" "timedatectl set-ntp false")
+  timedatectl status | grep inactive> /dev/null
+  if [ "$?" = "0" ]; then
+    options+=("Enable" "timedatectl set-ntp true")
+  else
+    options+=("Disable" "timedatectl set-ntp false")
+  fi
 fi
 options+=("Edit" "/etc/systemd/timesyncd.conf")
 
@@ -22,14 +32,24 @@ sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 case $sel in
   'Enable')
     clear
-    echo "timedatectl set-ntp true"
-    timedatectl set-ntp true
+    if inchroot; then
+      echo "systemctl enable systemd-timesyncd"
+      systemctl enable systemd-timesyncd
+    else
+      echo "timedatectl set-ntp true"
+      timedatectl set-ntp true
+    fi
     pressanykey
   ;;
   'Disable')
     clear
-    echo "timedatectl set-ntp false"
-    timedatectl set-ntp false
+    if inchroot; then
+      echo "systemctl disable systemd-timesyncd"
+      systemctl disable systemd-timesyncd
+    else
+      echo "timedatectl set-ntp false"
+      timedatectl set-ntp false
+    fi
     pressanykey
   ;;
   'Edit')

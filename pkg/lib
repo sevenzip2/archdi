@@ -405,13 +405,22 @@ dmenable(){
   current=$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)
   current=${current##*/}
   if [ ! "$current" = "" ]&&[ ! "$current" = "$1.service" ]&&[ ! "$current" = "$1" ]; then
+    # One question for the swap : never leave the system without a display manager
     if (confirm "$current is the current display manager.\n\nReplace it with $1 ?") then
       clear
       echo "systemctl disable $current"
       systemctl disable $current
-    else
-      return 1
+      echo "systemctl enable $1"
+      if ! systemctl enable $1; then
+        echo "Unable to enable $1, $current is enabled again."
+        systemctl enable $current
+        pressanykey
+        return 1
+      fi
+      pressanykey
+      return 0
     fi
+    return 1
   fi
   svcenable $1 "$2"
 }
