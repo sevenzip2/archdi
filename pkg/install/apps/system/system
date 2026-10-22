@@ -12,6 +12,7 @@ options+=("wine-gecko" "MS Windows App Support" off)
 options+=("wine-mono" "MS Windows App Support" off)
 options+=("zenity" "recommended for wine" off)
 options+=("winetricks" "recommended for wine" off)
+options+=("bottles" "(AUR) Windows apps in separate bottles, wine manager" off)
 options+=("q4wine-git" "(AUR)" off)
 options+=("baobab" "(GTK) Disk usage analyzer" off)
 options+=("k4dirstat" "(AUR)" off)
@@ -38,6 +39,7 @@ for itm in $sel; do
       pkg="$pkg virtualbox virtualbox-host-dkms"
       pkg="$pkg$(dkmsheaders "$pkg")"
     ;;
+    "bottles" | \
     "q4wine-git") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
