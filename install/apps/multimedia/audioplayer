@@ -2,11 +2,11 @@
 . ./lib
 
 options=()
-options+=("clementine" "(QT) Audio Player" off)
+options+=("strawberry" "(QT) Audio Player" off)
 options+=("mixxx" "(QT) Audio Player" off)
 options+=("quodlibet" "(GTK) Audio Player" off)
 options+=("elisa" "(QT) Audio Player" off)
-options+=("amarok" "(AUR) (QT) Audio Player" off)
+options+=("amarok" "(QT) Audio Player" off)
 options+=("guayadeque" "(AUR) (GTK) Audio Player" off)
 options+=("gmusicbrowser" "(AUR) (GTK) Audio Player" off)
 
@@ -19,7 +19,6 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "amarok" | \
     "guayadeque" | \
     "gmusicbrowser") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;

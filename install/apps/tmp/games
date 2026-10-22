@@ -2,7 +2,7 @@
 . ./lib
 
 options=()
-options+=("0AD" "" off)
+options+=("0ad" "" off)
 options+=("puzzles" "" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Game applications :" --cancel-button "Back" --checklist "Choose what you want" 0 0 0 \

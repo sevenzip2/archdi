@@ -3,14 +3,15 @@
 
 options=()
 options+=("virtualbox-guest-utils" "(For Virtualbox)" off)
-options+=("nvidia" "" off)
-options+=("nvidia-390xx" "(AUR) End of life" off)
-#options+=("nvidia-340xx" "" off) #DEAD ?
-options+=("nvidia-dkms" "(For custom kernel)" off)
-options+=("nvidia-390xx-dkms" "(AUR) (For custom kernel)" off)
-#options+=("nvidia-340xx-dkms" "(For custom kernel)" off) #DEAD ?
-#options+=("catalyst" "(AUR)" off)
-#options+=("catalyst-total-hd234k" "(AUR)" off)
+options+=("nvidia-open" "(Turing / GTX 16xx and newer, linux kernel)" off)
+options+=("nvidia-open-lts" "(Turing and newer, linux-lts kernel)" off)
+options+=("nvidia-open-dkms" "(Turing and newer, other kernels)" off)
+options+=("nvidia-utils" "" off)
+options+=("nvidia-settings" "" off)
+options+=("lib32-nvidia-utils" "(multilib, for Steam / Wine)" off)
+options+=("nvidia-580xx-dkms" "(AUR) Maxwell / Pascal / Volta" off)
+options+=("nvidia-470xx-dkms" "(AUR) Kepler" off)
+options+=("nvidia-390xx-dkms" "(AUR) Fermi, end of life" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "XOrg video drivers :" --cancel-button "Back" --checklist "Choose video drivers for your system :" 0 0 0 \
   "${options[@]}" \
@@ -21,7 +22,8 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "nvidia-390xx" | \
+    "nvidia-580xx-dkms" | \
+    "nvidia-470xx-dkms" | \
     "nvidia-390xx-dkms") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac

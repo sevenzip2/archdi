@@ -10,12 +10,12 @@ options+=("keepass" "(MONO) Password Manager" off)
 options+=("virtualbox" "(QT) Virtualization software" off)
 options+=("virtualbox-ext-oracle" "(AUR) Ext Pack" off)
 options+=("wine" "MS Windows App Support" off)
-options+=("wine_gecko" "MS Windows App Support" off)
+options+=("wine-gecko" "MS Windows App Support" off)
 options+=("wine-mono" "MS Windows App Support" off)
 options+=("zenity" "recommended for wine" off)
 options+=("winetricks" "recommended for wine" off)
-options+=("q4wine" "" off)
-options+=("gdmap" "" off)
+options+=("q4wine" "(AUR)" off)
+options+=("gdmap" "(AUR)" off)
 options+=("k4dirstat" "(AUR)" off)
 options+=("conky" "" off)
 
@@ -39,6 +39,8 @@ for itm in $sel; do
     '"virtualbox"' )
       pkg="$pkg $(echo $itm | sed 's/"//g')"
     ;;
+    "q4wine" | \
+    "gdmap") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

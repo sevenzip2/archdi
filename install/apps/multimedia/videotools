@@ -3,7 +3,7 @@
 
 options=()
 options+=("avidemux-qt" "(QT) Video Editor" off)
-options+=("simplescreenrecorder" "(QT) Screen Recorder" off)
+options+=("simplescreenrecorder" "(AUR) (QT) Screen Recorder" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Videos Tools applications :" --cancel-button "Back" --checklist "Choose what you want" 0 0 0 \
   "${options[@]}" \
@@ -14,6 +14,7 @@ fi
 
 for itm in $sel; do
   case $itm in
+    "simplescreenrecorder") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

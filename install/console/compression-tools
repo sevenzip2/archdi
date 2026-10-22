@@ -5,7 +5,7 @@ options=()
 options+=("zip" "ZIP files" on)
 options+=("unzip" "ZIP files" on)
 options+=("unrar" "RAR files" on)
-options+=("p7zip" "File Archiver" on)
+options+=("7zip" "File Archiver" on)
 options+=("lzop" "LZO Compressor" on)
 
 sel=$(dialog --backtitle "$apptitle" --title "Console Compression Tools :" --cancel-button "Back" --checklist "" 0 0 0 \

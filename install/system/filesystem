@@ -20,7 +20,7 @@ options+=("open-iscsi" "" off)
 options+=("glusterfs" "" off)
 options+=("hfsprogs" "(AUR)" off)
 options+=("mtpfs" "" off)
-options+=("unionfs-fuse" "" off)
+options+=("unionfs-fuse" "(AUR)" off)
 options+=("nilfs-utils" "" off)
 options+=("gvfs" "" off)
 options+=("s3fs-fuse" "" off)
@@ -41,6 +41,7 @@ for itm in $sel; do
     "hfsprogs")
       aurpkg="$aurpkg $(echo $itm | sed 's/"//g')"
     ;;
+    "unionfs-fuse") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

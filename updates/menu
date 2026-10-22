@@ -2,6 +2,10 @@
 . ./lib
 
 options=()
+if [ -f /usr/bin/paru ]; then
+  options+=("Upgrade with paru" "paru -Syu")
+  aurhelper=1
+fi
 if [ -f /usr/bin/trizen ]; then
   options+=("Upgrade with trizen" "trizen -Syu")
   aurhelper=1
@@ -10,13 +14,9 @@ if [ -f /usr/bin/yay ]; then
   options+=("Upgrade with yay" "yay -Syu")
   aurhelper=1
 fi
-if [ -f /usr/bin/aurman ]; then
-  options+=("Upgrade with aurman" "aurman -Syu")
-  aurhelper=1
-fi
 
 if [ -f /usr/bin/lynx ] || [ -f /usr/bin/elinks ] || [ -f /usr/bin/links ]; then
-  options+=("Latestt News" "")
+  options+=("Latest News" "")
   options+=("" "")
 fi
 
@@ -40,22 +40,19 @@ if [ "$aurhelper" = "1" ]; then
     options+=("Install downgrade" "(AUR)")
     options+=("" "")
   fi
-  if [ ! -f /usr/bin/pkgstats ]; then
-    options+=("Install pkgstats" "(AUR)")
-  fi
-  if [ ! -f /usr/bin/aurvote ]; then
-    options+=("Install aurvote" "(AUR)")
-  fi
 options+=("" "")
+fi
+if [ ! -f /usr/bin/pkgstats ]; then
+  options+=("Install pkgstats" "")
+fi
+if [ ! -f /usr/bin/paru ]; then
+  options+=("Install paru" "")
 fi
 if [ ! -f /usr/bin/trizen ]; then
   options+=("Install trizen" "")
 fi
 if [ ! -f /usr/bin/yay ]; then
   options+=("Install yay" "")
-fi
-if [ ! -f /usr/bin/aurman ]; then
-  options+=("Install aurman" "")
 fi
 if [ ! -f /usr/bin/pacdiff ]; then
   options+=("" "")
@@ -93,18 +90,10 @@ checkaurdependencies(){
     echo "root ALL=(aurbuilder) NOPASSWD: ALL" >> /etc/sudoers.d/aurbuilder
   fi
 }
-checkpackagequerydependencies(){
-  if [ ! -f /usr/bin/package-query ]; then
-    cd /tmp/aurbuilder
-    sudo -u aurbuilder git clone https://aur.archlinux.org/package-query.git
-    cd package-query
-    sudo -u aurbuilder makepkg -si
-  fi
-}
 
 clear
 case $sel in
-  'Latestt News')
+  'Latest News')
     newsurl='https://archlinux.org/news/'
     if [ -f /usr/bin/lynx ]; then
       /usr/bin/lynx ${newsurl}
@@ -119,21 +108,17 @@ case $sel in
     fi
   ;;
   'Upgrade') pacman -Syu;;
+  'Upgrade with paru')
+    checkaurdependencies
+    sudo -u aurbuilder paru -Syu
+  ;;
   'Upgrade with trizen')
     checkaurdependencies
     sudo -u aurbuilder trizen -Syu
   ;;
-  'Upgrade with aurman')
-    checkaurdependencies
-    sudo -u aurbuilder aurman -Syu
-  ;;
   'Upgrade with yay')
     checkaurdependencies
     sudo -u aurbuilder yay -Syu
-  ;;
-  'Upgrade with yaourt')
-    checkaurdependencies
-    sudo -u aurbuilder yaourt -Syua
   ;;
   'Clean orphan') pacman -Rns $(pacman -Qqtd);;
   'Clean cache') pacman -Sc;;
@@ -143,7 +128,8 @@ case $sel in
   'Refresh pacman keys') pacman-key --refresh-keys;;
   'Add GPG key')
     gpgservers=()
-    gpgservers+=("pool.sks-keyservers.net" "")
+    gpgservers+=("keyserver.ubuntu.com" "")
+    gpgservers+=("keys.openpgp.org" "")
     gpgservers+=("Other" "")
     sel=$(dialog --backtitle "$apptitle" --title "Add GPG key" --menu "GPG key server" 0 0 0 "${gpgservers[@]}" 3>&1 1>&2 2>&3)
     if [ "$?" = "0" ]; then
@@ -178,6 +164,16 @@ case $sel in
   'Install downgrade')
     instpkg "" "downgrade"
   ;;
+  'Install paru')
+    if(confirm "Paru allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall paru (paru-bin) ?") then
+      clear
+      checkaurdependencies
+      cd /tmp/aurbuilder
+      sudo -u aurbuilder git clone https://aur.archlinux.org/paru-bin.git
+      cd paru-bin
+      sudo -u aurbuilder makepkg -si
+    fi
+  ;;
   'Install trizen')
     if(confirm "Trizen allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall trizen ?") then
       clear
@@ -186,18 +182,6 @@ case $sel in
       sudo -u aurbuilder git clone https://aur.archlinux.org/trizen.git
       cd trizen
       sudo -u aurbuilder makepkg -si
-    fi
-  ;;
-  'Install aurman')
-    if(confirm "Aurman allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall aurman ?") then
-      clear
-      checkaurdependencies
-      cd /tmp/aurbuilder
-      sudo -u aurbuilder git clone https://aur.archlinux.org/aurman.git
-      cd aurman
-      sudo -u aurbuilder gpg --recv-key 465022E743D71E39
-      sudo -u aurbuilder makepkg -si
-      #sudo -u aurbuilder makepkg -si --skippgpcheck
     fi
   ;;
   'Install yay')
@@ -210,22 +194,8 @@ case $sel in
       sudo -u aurbuilder makepkg -si
     fi
   ;;
-  'Install yaourt')
-    if(confirm "Yaourt allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall yaourt ?") then
-      clear
-      checkaurdependencies
-      checkpackagequerydependencies
-      cd /tmp/aurbuilder
-      sudo -u aurbuilder git clone https://aur.archlinux.org/yaourt.git
-      cd yaourt
-      sudo -u aurbuilder makepkg -si
-    fi
-  ;;
   'Install pkgstats')
     pacman -S --needed pkgstats
-  ;;
-  'Install aurvote')
-    instpkg "" "aurvote"
   ;;
 esac
 
