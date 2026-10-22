@@ -8,7 +8,9 @@ items=$(pacman -Sqg lxqt)
 for item in $items; do
   options+=("$item" "" on)
 done
-options+=("lxqt-wayland-session" "Wayland session (needs a compositor : labwc, kwin...)" off)
+options+=("lxqt-wayland-session" "Wayland session" off)
+options+=("labwc" "Compositor of the Wayland session" off)
+options+=("xorg-xwayland" "X11 apps in the Wayland session" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "LXQT Install :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \
@@ -22,6 +24,23 @@ for itm in $sel; do
   pkg="$pkg $(echo $itm | sed 's/"//g')"
 done
 
+# The Wayland session starts the first compositor it finds (labwc, niri, kwin, wayfire, Hyprland, sway)
+if [[ " $pkg " == *" lxqt-wayland-session "* ]]; then
+  compositor=""
+  for bin in labwc niri kwin_wayland wayfire Hyprland sway; do
+    if [ -f /usr/bin/$bin ]; then
+      compositor=$bin
+    fi
+  done
+  if [ "$compositor" = "" ]&&[[ " $pkg " != *" labwc "* ]]; then
+    pkg="$pkg labwc xorg-xwayland"
+  fi
+fi
+
 instpkg "$pkg" "$aurpkg" || exit 1
+
+if [[ " $pkg " == *" lxqt-wayland-session "* ]]; then
+  dialog --backtitle "$apptitle" --title "LXQt sessions" --msgbox "At login, the LXQt session with Wayland in its name runs LXQt in a compositor, the other one is X11.\n\nThe compositor is chosen at the first Wayland login, change it in LXQt Configuration Center > Session Settings > Wayland Settings." 0 0
+fi
 
 exit 0

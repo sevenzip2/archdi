@@ -8,6 +8,11 @@ items=$(pacman -Sqg $package)
 for item in $items; do
   options+=("$item" "" on)
 done
+# xfce4-session always installs the experimental "Xfce Session (Wayland)", it needs a compositor
+if [ "$package" = "xfce4" ]; then
+  options+=("labwc" "Compositor of the Wayland session (experimental)" off)
+  options+=("xorg-xwayland" "X11 apps in the Wayland session" off)
+fi
 
 sel=$(dialog --backtitle "$apptitle" --title "$package Install :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \
@@ -22,5 +27,14 @@ for itm in $sel; do
 done
 
 instpkg "$pkg" "$aurpkg" || exit 1
+
+if [ "$package" = "xfce4" ]; then
+  if [ -f /usr/bin/labwc ]; then
+    msg="At login, \"Xfce Session\" is X11, \"Xfce Session (Wayland)\" runs XFCE in labwc (experimental)."
+  else
+    msg="At login, choose \"Xfce Session\" (X11).\n\n\"Xfce Session (Wayland)\" needs labwc and exits without it."
+  fi
+  dialog --backtitle "$apptitle" --title "XFCE sessions" --msgbox "$msg" 0 0
+fi
 
 exit 0

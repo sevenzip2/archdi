@@ -13,7 +13,7 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.11.06.39 (GPLv3)"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.11.15.47 (GPLv3)"
 baseurl=https://raw.githubusercontent.com/sevenzip2/archdi/master/pkg
 # Not in ~ : sudo may keep the HOME of the user
 cachedir=/var/cache/archdi
