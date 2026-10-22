@@ -63,12 +63,40 @@ getaurhelper(){
 
 
 # $1: pacman packages
+# Many packages (ffmpeg...) need libjack.so, provided by jack2 or pipewire-jack which conflict.
+# pacman picks jack2 by default and installing PipeWire later fails, so prefer pipewire-jack.
+preferpipewirejack(){
+  pkgs="$1"
+  case " $pkgs " in
+    *" jack2 "*|*" pipewire-jack "*|*" lib32-jack2 "*|*" lib32-pipewire-jack "*)
+      echo "$pkgs"
+      return
+    ;;
+  esac
+  if ! pacman -Qq jack2 &>/dev/null && ! pacman -Qq pipewire-jack &>/dev/null; then
+    resolved=$(pacman -Sp --print-format %n --needed --noconfirm $pkgs 2>/dev/null)
+    if echo "$resolved" | grep -qx jack2; then
+      pkgs="$pkgs pipewire-jack"
+    fi
+    if echo "$resolved" | grep -qx lib32-jack2 && ! pacman -Qq lib32-jack2 &>/dev/null; then
+      pkgs="$pkgs lib32-pipewire-jack"
+    fi
+  fi
+  echo "$pkgs"
+}
+
+
+# $1: pacman packages
 # $2: aur packages
 instpkg(){
   if [ ! "$1" = "" ]; then
     clear
-    echo "# pacman -S --needed $1"
-    pacman -S --needed $1
+    pkgs=$(preferpipewirejack "$1")
+    if [ ! "$pkgs" = "$1" ]; then
+      echo "libjack.so is needed : pipewire-jack is used instead of jack2"
+    fi
+    echo "# pacman -S --needed $pkgs"
+    pacman -S --needed $pkgs
     pressanykey
   fi
   if [ ! "$2" = "" ]; then

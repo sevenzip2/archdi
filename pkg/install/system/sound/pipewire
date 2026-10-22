@@ -37,6 +37,23 @@ for itm in $sel; do
   esac
 done
 
+# jack2 (pulled earlier by ffmpeg and others) conflicts with pipewire-jack
+if [[ " $pkg " == *" pipewire-jack "* ]]&&pacman -Qq jack2 &>/dev/null; then
+  if (confirm "jack2 is installed and conflicts with pipewire-jack.\n\nReplace jack2 with pipewire-jack ?") then
+    clear
+    echo "pacman -Rdd --noconfirm jack2"
+    pacman -Rdd --noconfirm jack2
+    echo "pacman -S --needed pipewire-jack"
+    if ! pacman -S --needed pipewire-jack; then
+      # Keep a libjack.so provider for the installed applications
+      echo "pacman -S --noconfirm jack2"
+      pacman -S --noconfirm jack2
+    fi
+    pressanykey
+  fi
+  pkg=$(echo " $pkg " | sed 's/ pipewire-jack / /')
+fi
+
 instpkg "$pkg" "$aurpkg"
 
 exit 0
