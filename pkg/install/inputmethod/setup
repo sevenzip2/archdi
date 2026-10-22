@@ -112,12 +112,12 @@ if [ ! "$(pacman -Qq noto-fonts-cjk 2>/dev/null)" ]; then
   fi
 fi
 
-instpkg "$pkg" "$aurpkg"
-
-clear
 # Keep the current input method when the new one did not install (download or AUR build failed, cancelled)
+instpkg "$pkg" "$aurpkg"
+instresult=$?
+clear
 required="$(echo " $pkg " | sed 's/ noto-fonts-cjk / /') $aurpkg"
-if ! pacman -Qq $required &>/dev/null; then
+if [ ! "$instresult" = "0" ]||! pacman -Qq $required &>/dev/null; then
   echo "$im is not installed, the current input method settings are kept."
   pressanykey
   exit 1

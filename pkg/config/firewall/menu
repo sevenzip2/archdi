@@ -32,7 +32,7 @@ disableotherfirewalls(){
 
 case $sel in
   'ufw')
-    instpkg "ufw" ""
+    instpkg "ufw" "" || exit 1
     if [ ! -f /usr/bin/ufw ]; then
       exit 0
     fi
@@ -58,7 +58,7 @@ case $sel in
     svcenable ufw "Firewall at boot"
   ;;
   'firewalld')
-    instpkg "firewalld" ""
+    instpkg "firewalld" "" || exit 1
     if [ ! -f /usr/bin/firewall-offline-cmd ]; then
       exit 0
     fi

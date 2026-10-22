@@ -47,6 +47,18 @@ case $sel in
         "${kernellist[@]}" \
         3>&1 1>&2 2>&3)
         if [ "$?" = "0" ]; then
+          uki=/boot/EFI/Linux/arch-$kernel.efi
+          if [ ! -f /boot/initramfs-$kernel.img ]; then
+            if [ -f $uki ]; then
+              # Unified Kernel Image : kernel, initramfs and options (/etc/kernel/cmdline) are inside the .efi
+              printf "title   %s\nefi     /EFI/Linux/arch-%s.efi\n" "$entry" "$kernel" > /boot/loader/entries/$entry.conf
+              dialog --backtitle "$apptitle" --title "Create entry" --msgbox "$kernel boots from a Unified Kernel Image ($uki).\n\nsystemd-boot already lists it, the entry starts the same image.\nKernel options are in /etc/kernel/cmdline (then run mkinitcpio -p $kernel)." 0 0
+              editfile /boot/loader/entries/$entry.conf
+            else
+              dialog --backtitle "$apptitle" --title "Create entry" --msgbox "/boot/initramfs-$kernel.img not found.\n\nCreate it first : mkinitcpio -p $kernel" 0 0
+            fi
+            exit 0
+          fi
           # Kernel options of this system : /proc/cmdline is the live ISO one when run from archfi (chroot)
           note=""
           existing=$(grep -h '^options' /boot/loader/entries/*.conf 2>/dev/null | head -n1)

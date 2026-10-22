@@ -18,8 +18,8 @@ case $sel in
   'gnome')
     require install/desktop/gnome/packages 755
     sed -i "/^package=/c\package=\"$sel\"" install/desktop/gnome/packages
+    # The packages checklist enables gdm when it is selected and installed
     script install/desktop/gnome/packages
-    dmenable gdm
   ;;
   'gnome-extra')
     require install/desktop/gnome/packages 755
