@@ -59,7 +59,14 @@ case $sel in
       3>&1 1>&2 2>&3)
       if [ "$?" = "0" ]; then
         if (confirm "Remove $sel from sudoers"); then
-          rm /etc/sudoers.d/$sel
+          mv /etc/sudoers.d/$sel /etc/sudoers.d/.$sel.archdi
+          user=$(sudouser)
+          # The account that runs archdi with sudo would lose sudo
+          if [ ! "$user" = "" ]&&! sudo -l -U "$user" 2>/dev/null | grep -q "may run"&&! (confirm "$user would no longer be able to use sudo.\n\nRemove $sel anyway ?" --defaultno); then
+            mv /etc/sudoers.d/.$sel.archdi /etc/sudoers.d/$sel
+          else
+            rm -f /etc/sudoers.d/.$sel.archdi
+          fi
         fi
       fi
     ;;

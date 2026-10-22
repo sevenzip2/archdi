@@ -9,6 +9,8 @@ options+=("qt6-wayland" "Qt apps on Wayland" on)
 options+=("mate-polkit" "Polkit agent" on)
 options+=("foot" "Default terminal (Super+Enter)" on)
 options+=("waybar" "Status bar" on)
+options+=("otf-font-awesome" "Icons of the waybar default config" on)
+options+=("noto-fonts" "Base font (waybar text)" on)
 # The default /etc/sway/config runs wmenu-run on Super+D
 options+=("wmenu" "Default app launcher (Super+D)" on)
 options+=("fuzzel" "App launcher (set \$menu fuzzel)" off)

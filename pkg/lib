@@ -13,9 +13,10 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.47.39 (GPLv3)"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.55.23 (GPLv3)"
 baseurl=https://raw.githubusercontent.com/sevenzip2/archdi/master/pkg
-cachedir=~/.cache/archdi
+# Not in ~ : sudo may keep the HOME of the user
+cachedir=/var/cache/archdi
 
 
 cat << EOF > dialog.archfi
@@ -49,6 +50,26 @@ script(){
   $cachedir/$1
 }
 
+
+# echo the user who started archdi with sudo (empty when run as root)
+sudouser(){
+  if [ ! "$SUDO_USER" = "" ]&&[ ! "$SUDO_USER" = "root" ]&&id -u "$SUDO_USER" &>/dev/null; then
+    echo "$SUDO_USER"
+  fi
+}
+
+# $1 : group
+# $2 : why
+# Offer to add the user who runs archdi to a group
+addusergroup(){
+  user=$(sudouser)
+  if [ ! "$user" = "" ]&&getent group $1 >/dev/null&&! id -nG "$user" | grep -qw $1; then
+    if (confirm "Add $user to the $1 group ?\n\n($2, log out and in again to apply)") then
+      echo "usermod -aG $1 $user"
+      usermod -aG $1 "$user"
+    fi
+  fi
+}
 
 # echo the installed AUR helper (paru, yay or trizen)
 getaurhelper(){

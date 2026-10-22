@@ -67,8 +67,15 @@ case $sel in
       users=$(awk -F: '{if ($3 >= 1000 && $3 <= 5000) { print $1 } }' /etc/passwd)
       userlist=()
       for itm in $users; do
-        userlist+=("$itm" "")
+        # Not the account that runs archdi with sudo
+        if [ ! "$itm" = "$(sudouser)" ]; then
+          userlist+=("$itm" "")
+        fi
       done
+      if [ "${#userlist[@]}" = "0" ]; then
+        dialog --backtitle "$apptitle" --title "Delete User" --msgbox "No other user to delete." 0 0
+        exit 0
+      fi
       username=$(dialog --backtitle "$apptitle" --title "Delete User" --cancel-button "Cancel" --menu "" 0 0 0 \
         "${userlist[@]}" \
         3>&1 1>&2 2>&3)

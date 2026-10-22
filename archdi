@@ -13,9 +13,10 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.47.39 (GPLv3)"
-version="2026.10.22.10.47.39"
-cachedir=~/.cache/archdi
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.55.23 (GPLv3)"
+version="2026.10.22.10.55.23"
+# Not in ~ : sudo may keep the HOME of the user
+cachedir=/var/cache/archdi
 
 githubuser=sevenzip2
 

@@ -51,4 +51,9 @@ fi
 
 instpkg "$pkg" "$aurpkg" || exit 1
 
+if [[ " $pkg " == *" virtualbox "* ]]; then
+  addusergroup vboxusers "USB devices in VirtualBox machines"
+  pressanykey
+fi
+
 exit 0

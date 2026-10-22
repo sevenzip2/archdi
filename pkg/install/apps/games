@@ -44,7 +44,9 @@ fi
 instpkg "$pkg" "$aurpkg" || exit 1
 
 if [[ "$pkg" == *"gamemode"* ]]; then
-  dialog --backtitle "$apptitle" --title "Games" --msgbox "Add your user to the gamemode group :\n\nusermod -aG gamemode <user>\n\nSteam : launch options gamemoderun %command%" 0 0
+  clear
+  addusergroup gamemode "gamemode changes the CPU governor and priorities"
+  dialog --backtitle "$apptitle" --title "Games" --msgbox "Other users need the gamemode group too :\n\nusermod -aG gamemode <user>\n\nSteam : launch options gamemoderun %command%" 0 0
 fi
 
 exit 0

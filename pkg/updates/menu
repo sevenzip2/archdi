@@ -156,8 +156,17 @@ case $sel in
         echo "yay -Y --devel --save, yay -Y --gendb"
         aurrun yay -Y --devel --save
         aurrun yay -Y --gendb
-        pressanykey
-        dialog --backtitle "$apptitle" --title "yay : devel upgrades" --msgbox "archdi upgrades -git packages with --devel.\n\nWhen you run yay from your own account, enable it once for that account (not as root, no sudo) :\n\n  yay -Y --devel --save\n  yay -Y --gendb\n\nThen yay -Syu also rebuilds -git packages that have new commits." 0 0
+        # yay keeps its settings per account : also for the user who started archdi with sudo
+        user=$(sudouser)
+        if [ ! "$user" = "" ]; then
+          echo ""
+          echo "sudo -u $user yay -Y --devel --save, yay -Y --gendb"
+          (cd /tmp && sudo -u "$user" -H yay -Y --devel --save && sudo -u "$user" -H yay -Y --gendb)
+          pressanykey
+        else
+          pressanykey
+          dialog --backtitle "$apptitle" --title "yay : devel upgrades" --msgbox "archdi upgrades -git packages with --devel.\n\nWhen you run yay from your own account, enable it once for that account (not as root, no sudo) :\n\n  yay -Y --devel --save\n  yay -Y --gendb\n\nThen yay -Syu also rebuilds -git packages that have new commits." 0 0
+        fi
       fi
     fi
   ;;
