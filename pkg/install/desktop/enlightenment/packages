@@ -7,6 +7,7 @@ package=""
 options+=("enlightenment" "" on)
 options+=("connman" "" on)
 options+=("acpid" "" on)
+options+=("terminology" "Terminal" on)
 
 sel=$(dialog --backtitle "$apptitle" --title "Enlightenment Install :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \

@@ -16,6 +16,13 @@ for item in $items; do
     *) options+=("$item" "" on);;
   esac
 done
+# The plasma group has no terminal, file manager or text editor (they are KDE applications)
+options+=("konsole" "Terminal" on)
+options+=("dolphin" "File manager" on)
+options+=("kate" "Text editor" on)
+options+=("ark" "Archive manager" on)
+options+=("gwenview" "Image viewer" off)
+options+=("okular" "Document viewer" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "$package Install :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \

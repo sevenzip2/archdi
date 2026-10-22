@@ -10,6 +10,7 @@ for item in $items; do
     *) options+=("$item" "" on);;
   esac
 done
+options+=("xterm" "Terminal" on)
 
 sel=$(dialog --backtitle "$apptitle" --title "Openbox Install :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \
