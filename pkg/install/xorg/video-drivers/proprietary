@@ -41,6 +41,18 @@ for itm in $sel; do
   esac
 done
 
+# DKMS builds the module for every installed kernel, the headers are only optional dependencies of dkms
+if [[ " $pkg $aurpkg " == *"-dkms "* ]]; then
+  for pkgbase in /usr/lib/modules/*/pkgbase; do
+    if [ -f "$pkgbase" ]; then
+      headers="$(cat "$pkgbase")-headers"
+      if pacman -Si $headers &>/dev/null&&[[ " $pkg " != *" $headers "* ]]; then
+        pkg="$pkg $headers"
+      fi
+    fi
+  done
+fi
+
 instpkg "$pkg" "$aurpkg"
 
 for itm in $sel; do
