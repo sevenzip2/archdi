@@ -156,9 +156,8 @@ case $sel in
         echo "yay -Y --devel --save, yay -Y --gendb"
         aurrun yay -Y --devel --save
         aurrun yay -Y --gendb
-        echo ""
-        echo "To enable it for your own user too, run once : yay -Y --devel --save"
         pressanykey
+        dialog --backtitle "$apptitle" --title "yay : devel upgrades" --msgbox "archdi upgrades -git packages with --devel.\n\nWhen you run yay from your own account, enable it once for that account (not as root, no sudo) :\n\n  yay -Y --devel --save\n  yay -Y --gendb\n\nThen yay -Syu also rebuilds -git packages that have new commits." 0 0
       fi
     fi
   ;;
