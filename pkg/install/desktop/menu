@@ -29,7 +29,7 @@ fi
 sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 
 case $sel in
-  'Plasma') menu install/desktop/plasma5/menu;;
+  'Plasma') menu install/desktop/plasma/menu;;
   'XFCE4') menu install/desktop/xfce4/menu;;
   'Gnome') menu install/desktop/gnome/menu;;
   'Cinnamon') menu install/desktop/cinnamon/menu;;

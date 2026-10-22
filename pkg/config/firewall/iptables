@@ -20,39 +20,39 @@ fi
 sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 
 case $sel in
-		'Edit IPv4') editfile /etc/iptables/iptables.rules;;
-		'Edit IPv6') editfile /etc/iptables/ip6tables.rules;;
-		'Load Rules') iptables-restore < /etc/iptables/iptables.rules
-		              ip6tables-restore < /etc/iptables/ip6tables.rules;;
-		'Start At Boot') systemctl enable iptables
-		                 systemctl start iptables
-		                 systemctl enable ip6tables
-		                 systemctl start ip6tables;;
-		'Generate Default Rules')
-		   file=/etc/iptables/iptables.rules
-		   echo '*filter' > $file
-		   echo ':INPUT DROP [0:0]' >> $file
-		   echo ':FORWARD DROP [0:0]' >> $file
-		   echo ':OUTPUT ACCEPT [0:0]' >> $file
-		   echo '-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT' >> $file
-		   echo '-A INPUT -i lo -j ACCEPT' >> $file
-		   echo '# SSH' >> $file
-		   echo '#-A INPUT -p tcp -m tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT' >> $file
-		   echo '# Ping' >> $file
-		   echo '#-A INPUT -p icmp -j ACCEPT' >> $file
-		   echo '# SNMP' >> $file
-		   echo '#-A INPUT -s 192.168.0.0/24 -p udp -m udp --dport 161 -m conntrack --ctstate NEW -j ACCEPT' >> $file
-		   echo 'COMMIT' >> $file
-		   iptables-restore $file
-		   file=/etc/iptables/ip6tables.rules
-		   echo '*filter' > $file
-		   echo ':INPUT DROP [0:0]' >> $file
-		   echo ':FORWARD DROP [0:0]' >> $file
-		   echo ':OUTPUT ACCEPT [0:0]' >> $file
-		   echo '-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT' >> $file
-		   echo '-A INPUT -i lo -j ACCEPT' >> $file
-		   echo 'COMMIT' >> $file
-		   ip6tables-restore $file;;
+    'Edit IPv4') editfile /etc/iptables/iptables.rules;;
+    'Edit IPv6') editfile /etc/iptables/ip6tables.rules;;
+    'Load Rules') iptables-restore < /etc/iptables/iptables.rules
+                  ip6tables-restore < /etc/iptables/ip6tables.rules;;
+    'Start At Boot') systemctl enable iptables
+                     systemctl start iptables
+                     systemctl enable ip6tables
+                     systemctl start ip6tables;;
+    'Generate Default Rules')
+       file=/etc/iptables/iptables.rules
+       echo '*filter' > $file
+       echo ':INPUT DROP [0:0]' >> $file
+       echo ':FORWARD DROP [0:0]' >> $file
+       echo ':OUTPUT ACCEPT [0:0]' >> $file
+       echo '-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT' >> $file
+       echo '-A INPUT -i lo -j ACCEPT' >> $file
+       echo '# SSH' >> $file
+       echo '#-A INPUT -p tcp -m tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT' >> $file
+       echo '# Ping' >> $file
+       echo '#-A INPUT -p icmp -j ACCEPT' >> $file
+       echo '# SNMP' >> $file
+       echo '#-A INPUT -s 192.168.0.0/24 -p udp -m udp --dport 161 -m conntrack --ctstate NEW -j ACCEPT' >> $file
+       echo 'COMMIT' >> $file
+       iptables-restore $file
+       file=/etc/iptables/ip6tables.rules
+       echo '*filter' > $file
+       echo ':INPUT DROP [0:0]' >> $file
+       echo ':FORWARD DROP [0:0]' >> $file
+       echo ':OUTPUT ACCEPT [0:0]' >> $file
+       echo '-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT' >> $file
+       echo '-A INPUT -i lo -j ACCEPT' >> $file
+       echo 'COMMIT' >> $file
+       ip6tables-restore $file;;
 esac
 
 exit 0

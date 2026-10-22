@@ -16,59 +16,59 @@ fi
 sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 
 case $sel in
-		'List Users')
-		  clear
-		  awk -F: '{if ($3 >= 1000 && $3 <= 5000) { print $1 } }' /etc/passwd
-		  read -n1 -p "press a key to continue"
-		;;
-		'Add User')
-		  username=$(dialog --backtitle "$apptitle" --title "Add User" --inputbox "Enter the new user name :" 0 0 3>&1 1>&2 2>&3)
-		  if [ "$?" = "0" ]; then
-		    if ! validusername "$username" || id -u "$username" &>/dev/null; then
-		      dialog --backtitle "$apptitle" --title "Add User" --msgbox "Invalid or existing user name : $username" 0 0
-		      exit 0
-		    fi
-		    groups=""
-		    if (confirm "Allow $username to use sudo (wheel group) ?") then
-		      groups="-G wheel"
-		    fi
-		    clear
-		    echo "useradd -m $groups -s /bin/bash $username"
-		    useradd -m $groups -s /bin/bash $username
-		    if [ ! "$groups" = "" ]; then
-		      if ! grep -qsE '^\s*%wheel\s+ALL' /etc/sudoers /etc/sudoers.d/*; then
-		        echo "Enable sudo for wheel group (/etc/sudoers.d/10-wheel)"
-		        writesudoers 10-wheel "%wheel ALL=(ALL:ALL) ALL"
-		      fi
-		    fi
-		    echo "User $username created."
-		    echo ""
-		    echo "Choose a password for $username :"
-		    echo ""
-		    until passwd $username; do
-		      echo ""
-		    done
-		    grpck
-		    pressanykey
-		  fi
-		;;
-		'Delete User')
-		  users=$(awk -F: '{if ($3 >= 1000 && $3 <= 5000) { print $1 } }' /etc/passwd)
-		  userlist=()
-		  for itm in $users; do
-		    userlist+=("$itm" "")
-		  done
-		  username=$(dialog --backtitle "$apptitle" --title "Delete User" --cancel-button "Cancel" --menu "" 0 0 0 \
-		    "${userlist[@]}" \
-		    3>&1 1>&2 2>&3)
-		  if [ "$?" = "0" ]; then
-		    if (confirm "Delete $username and its home directory ?" --defaultno) then
-		      userdel -r $username
-		      rm -f /etc/sudoers.d/$username
-		      grpck
-		    fi
-		  fi
-		;;
+    'List Users')
+      clear
+      awk -F: '{if ($3 >= 1000 && $3 <= 5000) { print $1 } }' /etc/passwd
+      read -n1 -p "press a key to continue"
+    ;;
+    'Add User')
+      username=$(dialog --backtitle "$apptitle" --title "Add User" --inputbox "Enter the new user name :" 0 0 3>&1 1>&2 2>&3)
+      if [ "$?" = "0" ]; then
+        if ! validusername "$username" || id -u "$username" &>/dev/null; then
+          dialog --backtitle "$apptitle" --title "Add User" --msgbox "Invalid or existing user name : $username" 0 0
+          exit 0
+        fi
+        groups=""
+        if (confirm "Allow $username to use sudo (wheel group) ?") then
+          groups="-G wheel"
+        fi
+        clear
+        echo "useradd -m $groups -s /bin/bash $username"
+        useradd -m $groups -s /bin/bash $username
+        if [ ! "$groups" = "" ]; then
+          if ! grep -qsE '^\s*%wheel\s+ALL' /etc/sudoers /etc/sudoers.d/*; then
+            echo "Enable sudo for wheel group (/etc/sudoers.d/10-wheel)"
+            writesudoers 10-wheel "%wheel ALL=(ALL:ALL) ALL"
+          fi
+        fi
+        echo "User $username created."
+        echo ""
+        echo "Choose a password for $username :"
+        echo ""
+        until passwd $username; do
+          echo ""
+        done
+        grpck
+        pressanykey
+      fi
+    ;;
+    'Delete User')
+      users=$(awk -F: '{if ($3 >= 1000 && $3 <= 5000) { print $1 } }' /etc/passwd)
+      userlist=()
+      for itm in $users; do
+        userlist+=("$itm" "")
+      done
+      username=$(dialog --backtitle "$apptitle" --title "Delete User" --cancel-button "Cancel" --menu "" 0 0 0 \
+        "${userlist[@]}" \
+        3>&1 1>&2 2>&3)
+      if [ "$?" = "0" ]; then
+        if (confirm "Delete $username and its home directory ?" --defaultno) then
+          userdel -r $username
+          rm -f /etc/sudoers.d/$username
+          grpck
+        fi
+      fi
+    ;;
 esac
 
 exit 0

@@ -18,43 +18,43 @@ fi
 sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 
 case $sel in
-		'Add sudoer')
-		  users=$(awk -F: '{if ($3 >= 1000 && $3 <= 5000) { print $1 } }' /etc/passwd)
-		  userlist=()
-		  for itm in $users; do
-		    userlist+=("$itm" "")
-		  done
-		  sel=$(dialog --backtitle "$apptitle" --title "Add sudoer :" --cancel-button "Cancel" --menu "" 0 0 0 \
+    'Add sudoer')
+      users=$(awk -F: '{if ($3 >= 1000 && $3 <= 5000) { print $1 } }' /etc/passwd)
+      userlist=()
+      for itm in $users; do
+        userlist+=("$itm" "")
+      done
+      sel=$(dialog --backtitle "$apptitle" --title "Add sudoer :" --cancel-button "Cancel" --menu "" 0 0 0 \
       "${userlist[@]}" \
       3>&1 1>&2 2>&3)
       if [ "$?" = "0" ]; then
         writesudoers $sel "$sel ALL=(ALL:ALL) ALL"
       fi
-		;;
-		'Edit sudoer')
-		  sudoers=$(ls /etc/sudoers.d)
-		  sudoerlist=()
-		  for itm in $sudoers; do
+    ;;
+    'Edit sudoer')
+      sudoers=$(ls /etc/sudoers.d)
+      sudoerlist=()
+      for itm in $sudoers; do
         if [ ! "$itm" = "aurbuilder" ]; then
           sudoerlist+=("$itm" "")
         fi
-		  done
-		  sel=$(dialog --backtitle "$apptitle" --title "Edit sudoer :" --cancel-button "Cancel" --menu "" 0 0 0 \
+      done
+      sel=$(dialog --backtitle "$apptitle" --title "Edit sudoer :" --cancel-button "Cancel" --menu "" 0 0 0 \
       "${sudoerlist[@]}" \
       3>&1 1>&2 2>&3)
       if [ "$?" = "0" ]; then
         editsudoers /etc/sudoers.d/$sel
       fi
-		;;
-		'Delete sudoer')
-		  sudoers=$(ls /etc/sudoers.d)
-		  sudoerlist=()
-		  for itm in $sudoers; do
+    ;;
+    'Delete sudoer')
+      sudoers=$(ls /etc/sudoers.d)
+      sudoerlist=()
+      for itm in $sudoers; do
         if [ ! "$itm" = "aurbuilder" ]; then
           sudoerlist+=("$itm" "")
-		    fi
-		  done
-		  sel=$(dialog --backtitle "$apptitle" --title "Delete sudoer :" --cancel-button "Cancel" --menu "" 0 0 0 \
+        fi
+      done
+      sel=$(dialog --backtitle "$apptitle" --title "Delete sudoer :" --cancel-button "Cancel" --menu "" 0 0 0 \
       "${sudoerlist[@]}" \
       3>&1 1>&2 2>&3)
       if [ "$?" = "0" ]; then
@@ -62,10 +62,10 @@ case $sel in
           rm /etc/sudoers.d/$sel
         fi
       fi
-		;;
-		'Edit /etc/sudoers')
+    ;;
+    'Edit /etc/sudoers')
       editsudoers /etc/sudoers
-		;;
+    ;;
 esac
 
 exit 0

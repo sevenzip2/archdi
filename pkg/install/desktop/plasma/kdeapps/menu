@@ -28,9 +28,9 @@ case $sel in
       instpkg "kde-applications" ""
     fi
   ;;
-  'Selective') script install/desktop/plasma5/kdeapps/kdeapps;;
-  'Categories Meta') script install/desktop/plasma5/kdeapps/metapackages;;
-  'Categories') menu install/desktop/plasma5/kdeapps/packagecategories;;
+  'Selective') script install/desktop/plasma/kdeapps/kdeapps;;
+  'Categories Meta') script install/desktop/plasma/kdeapps/metapackages;;
+  'Categories') menu install/desktop/plasma/kdeapps/packagecategories;;
 esac
 
 exit 0
