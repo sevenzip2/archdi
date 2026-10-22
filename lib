@@ -3,17 +3,18 @@
 
 # Arch Linux Desktop Install (archdi)
 # -----------------------------------
-# author    : MatMoul
+# author    : MatMoul (original author)
 #             https://github.com/MatMoul
-#             http://sourceforge.net/u/matmoul
-# project   : https://github.com/MatMoul/archdi
-#             http://sourceforge.net/projects/archdi/
+# maintainer: sevenzip2 (fork)
+#             https://github.com/sevenzip2
+# project   : https://github.com/sevenzip2/archdi
+# upstream  : https://github.com/MatMoul/archdi
 # license   : GPLv3 (http://opensource.org/licenses/GPL-3.0)
 
 
 
 apptitle="Arch Linux Desktop Install (archdi) - Version: 2022.11.20.22.42.58 (GPLv3)"
-baseurl=https://raw.githubusercontent.com/MatMoul/archdi-pkg/master
+baseurl=https://raw.githubusercontent.com/sevenzip2/archdi-pkg/master
 cachedir=~/.cache/archdi
 
 
