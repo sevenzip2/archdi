@@ -65,12 +65,17 @@ run(){
     cp -r $pkgdir/* . >/dev/null
   else
     if [ "$pkgurl" == "" ]; then
-      curl -L $liburl > lib 
+      if ! curl -fsSL $liburl -o lib; then
+        echo "Unable to download $liburl"
+        exit 1
+      fi
     else
       echo ""
       echo "Downloading packages..."
-      curl -L $pkgurl > pkg.tar
-      tar -xf pkg.tar
+      if ! curl -fsSL $pkgurl -o pkg.tar || ! tar -xf pkg.tar; then
+        echo "Unable to download $pkgurl"
+        exit 1
+      fi
     fi
   fi
   
@@ -158,11 +163,13 @@ dependencies(){
 chkupgrade(){
   if [[ "$0" = "/usr/local/bin/archdi" ]]; then
     if [ ! "$version" = "$lastver" ]; then
-      if (whiptail --backtitle "$apptitle" --yesno "New version found !\n\nInstall last version ?" 0 0) then
+      if (dialog --backtitle "$apptitle" --yesno "New version found !\n\nInstall last version ?" 0 0) then
         cd /tmp
-        curl -LO $binurl
-        sh archdi -i
-        exit 0
+        if curl -fsSL $binurl -o archdi; then
+          sh archdi -i
+          exit 0
+        fi
+        echo "Unable to download $binurl"
       fi
     fi
   fi
