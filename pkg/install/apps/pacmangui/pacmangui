@@ -13,8 +13,8 @@ fi
 
 for itm in $sel; do
   case $itm in
-    '"octopi"' | \
-    '"pamac-aur"')
+    "octopi" | \
+    "pamac-aur")
       aurpkg="$aurpkg $(echo $itm | sed 's/"//g')"
     ;;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;

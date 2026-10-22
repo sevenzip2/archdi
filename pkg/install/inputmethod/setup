@@ -115,6 +115,13 @@ fi
 instpkg "$pkg" "$aurpkg"
 
 clear
+# Keep the current input method when the new one did not install (download or AUR build failed, cancelled)
+required="$(echo " $pkg " | sed 's/ noto-fonts-cjk / /') $aurpkg"
+if ! pacman -Qq $required &>/dev/null; then
+  echo "$im is not installed, the current input method settings are kept."
+  pressanykey
+  exit 1
+fi
 cleanim
 
 # On Wayland, GTK3/4 and Qt6 talk to fcitx5/ibus through the text-input protocol and need no

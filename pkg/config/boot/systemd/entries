@@ -47,9 +47,26 @@ case $sel in
         "${kernellist[@]}" \
         3>&1 1>&2 2>&3)
         if [ "$?" = "0" ]; then
-          # Start from the running kernel command line, without the loader specific parts
-          cmdline=$(sed -E 's/(^| )(BOOT_IMAGE|initrd)=[^ ]*//g; s/^ +//' /proc/cmdline)
-          printf "title   %s\nlinux   /vmlinuz-%s\ninitrd  /initramfs-%s.img\noptions %s\n" \
+          # Kernel options of this system : /proc/cmdline is the live ISO one when run from archfi (chroot)
+          note=""
+          existing=$(grep -h '^options' /boot/loader/entries/*.conf 2>/dev/null | head -n1)
+          if [ -f /etc/kernel/cmdline ]; then
+            cmdline=$(cat /etc/kernel/cmdline)
+          elif [ ! "$existing" = "" ]; then
+            cmdline=$(echo "${existing#options}" | sed 's/^ *//')
+          elif ! inchroot; then
+            cmdline=$(sed -E 's/(^| )(BOOT_IMAGE|initrd)=[^ ]*//g; s/^ +//' /proc/cmdline)
+          else
+            cmdline="root=UUID=$(findmnt -no UUID /) rw"
+            subvol=$(findmnt -no OPTIONS / | tr ',' '\n' | grep '^subvol=' | sed 's#^subvol=/\?##')
+            if [ ! "$subvol" = "" ]; then
+              cmdline="$cmdline rootflags=subvol=$subvol"
+            fi
+            if [[ "$(findmnt -no SOURCE /)" == /dev/mapper/* ]]; then
+              note="# Encrypted root : add rd.luks.name=<LUKS UUID>=root (or cryptdevice=) to the options\n"
+            fi
+          fi
+          printf "${note}title   %s\nlinux   /vmlinuz-%s\ninitrd  /initramfs-%s.img\noptions %s\n" \
             "$entry" "$kernel" "$kernel" "$cmdline" > /boot/loader/entries/$entry.conf
           editfile /boot/loader/entries/$entry.conf
         fi

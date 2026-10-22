@@ -28,15 +28,15 @@ fi
 
 for itm in $sel; do
   case $itm in
-    '"keepassx-git"' | \
-    '"virtualbox-ext-oracle"' | \
-    '"k4dirstat"') aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
-    '"wine"' | \
-    '"wine_gecko"')
+    "keepassx-git" | \
+    "virtualbox-ext-oracle" | \
+    "k4dirstat") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    "wine" | \
+    "wine-gecko")
       multilib="true"
       pkg="$pkg $(echo $itm | sed 's/"//g')"
     ;;
-    '"virtualbox"' )
+    "virtualbox" )
       pkg="$pkg $(echo $itm | sed 's/"//g')"
     ;;
     "q4wine" | \
