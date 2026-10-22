@@ -13,8 +13,8 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.09.49.32 (GPLv3)"
-version="2026.10.22.09.49.32"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.12.36 (GPLv3)"
+version="2026.10.22.10.12.36"
 cachedir=~/.cache/archdi
 
 githubuser=sevenzip2

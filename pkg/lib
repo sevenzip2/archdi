@@ -13,7 +13,7 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.09.49.32 (GPLv3)"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.12.36 (GPLv3)"
 baseurl=https://raw.githubusercontent.com/sevenzip2/archdi/master/pkg
 cachedir=~/.cache/archdi
 
@@ -484,6 +484,10 @@ addkernelboot(){
 dmenable(){
   current=$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)
   current=${current##*/}
+  if [ "$current" = "" ]; then
+    # ly@ttyN.service is enabled from multi-user.target and has no display-manager alias
+    current=$(ls /etc/systemd/system/multi-user.target.wants/ 2>/dev/null | grep -m1 '^ly@.*\.service$')
+  fi
   if [ ! "$current" = "" ]&&[ ! "$current" = "$1.service" ]&&[ ! "$current" = "$1" ]; then
     # One question for the swap : never leave the system without a display manager
     if (confirm "$current is the current display manager.\n\nReplace it with $1 ?") then
@@ -497,6 +501,13 @@ dmenable(){
         pressanykey
         return 1
       fi
+      # A Ly instance left next to another display manager would start too
+      for ly in $(ls /etc/systemd/system/multi-user.target.wants/ 2>/dev/null | grep '^ly@.*\.service$'); do
+        if [ ! "$ly" = "$1.service" ]&&[ ! "$ly" = "$1" ]; then
+          echo "systemctl disable $ly"
+          systemctl disable $ly
+        fi
+      done
       pressanykey
       return 0
     fi
