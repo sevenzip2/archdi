@@ -61,6 +61,12 @@ fi
 echo "$conf :"
 cat $conf
 echo ""
+# Virtual machines (VirtualBox, VMware, QEMU) draw no hardware cursor with wlroots : software cursor
+if systemd-detect-virt -q --vm&&! grep -q '^WLR_NO_HARDWARE_CURSORS=' /etc/environment 2>/dev/null; then
+  echo "Virtual machine : WLR_NO_HARDWARE_CURSORS=1 in /etc/environment (mouse cursor)"
+  echo "WLR_NO_HARDWARE_CURSORS=1" >> /etc/environment
+  echo ""
+fi
 echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"
 echo "  sway"
 echo "Copy /etc/sway/config to ~/.config/sway/config to customize it."
