@@ -5,6 +5,6 @@
 * **Work on a feature branch and open a PR against master**
 * **Use tab for identation**
 * **Preserve identation on empty line**
-* **Test your changes**
+* **Test your changes (archdi -t github-username branchname)**
 
 - [ ] I've read these rules before submitting my PR.

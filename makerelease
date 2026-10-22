@@ -8,10 +8,6 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 clear
 read -p "Current branch is $branch. Continue ? (y/N)" choice
 case "$choice" in 
-  n|N|'' )
-    echo "cancel build !"
-    exit 1
-  ;;
   y|Y ) echo "Begin Build Release...";;
   * )
     echo "cancel build !"
@@ -21,9 +17,10 @@ esac
 echo "Building version $version..."
 echo ""
 
-echo "Finalise archdi script..."
-sed -i /^apptitle=/c\apptitle=\""Arch Linux Desktop Install (archdi) - Version: $version (GPLv3)"\" archdi
+echo "Finalise archdi script and lib..."
+sed -i /^apptitle=/c\apptitle=\""Arch Linux Desktop Install (archdi) - Version: $version (GPLv3)"\" archdi pkg/lib
 sed -i /^version=/c\version=\""$version"\" archdi
+sed -i /^baseurl=/c\baseurl=https://raw.githubusercontent.com/sevenzip2/archdi/master/pkg pkg/lib
 
 echo "Set version..."
 echo "$version" >version

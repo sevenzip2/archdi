@@ -13,8 +13,8 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2022.11.20.22.42.58 (GPLv3)"
-baseurl=https://raw.githubusercontent.com/sevenzip2/archdi-pkg/master
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.06.18.02 (GPLv3)"
+baseurl=https://raw.githubusercontent.com/sevenzip2/archdi/master/pkg
 cachedir=~/.cache/archdi
 
 

@@ -13,8 +13,8 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2022.11.11.02.04.49 (GPLv3)"
-version="2022.11.11.02.04.49"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.06.18.02 (GPLv3)"
+version="2026.10.22.06.18.02"
 cachedir=~/.cache/archdi
 
 githubuser=sevenzip2
@@ -25,17 +25,25 @@ lastverurl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi@master/version
 binurl1=https://raw.githubusercontent.com/$githubuser/archdi/master/archdi
 binurl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi@master/archdi
 
-liburl1=https://raw.githubusercontent.com/$githubuser/archdi-pkg/master/lib
-liburl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi-pkg@master/lib
-
-pkgurl1=https://raw.githubusercontent.com/$githubuser/archdi-pkg/master/pkg.tar
-pkgurl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi-pkg@master/pkg.tar
+# The menus live in the pkg/ folder of this repository
+# $1 : github user
+# $2 : branch
+setpkgurls(){
+  # 1 : whole pkg/ folder from the GitHub source archive
+  pkgurl1=https://github.com/$1/archdi/archive/refs/heads/$2.tar.gz
+  pkgbaseurl1=https://raw.githubusercontent.com/$1/archdi/$2/pkg
+  # 2 : lib only from jsDelivr, lib then downloads each menu when needed
+  liburl2=https://cdn.jsdelivr.net/gh/$1/archdi@$2/pkg/lib
+  pkgbaseurl2=https://cdn.jsdelivr.net/gh/$1/archdi@$2/pkg
+}
+setpkgurls $githubuser master
 
 
 help(){
   echo "-h | --help                   : this screen"
   echo "-i | --install                : install"
-  echo "-l | --local dir              : run local archdi-pkg dir"
+  echo "-l | --local dir              : run a local pkg dir (archdi/pkg)"
+  echo "-b | --branch branch          : launch a branch of $githubuser/archdi"
   echo "-t | --test githubuser branch : launch a forked branch"
   echo "no args                       : start archdi"
 }
@@ -62,7 +70,7 @@ run(){
   cd $cachedir 2>/dev/null
   
   if [ ! "$pkgdir" = "" ]; then
-    cp -r $pkgdir/* . >/dev/null
+    cp -r "$pkgdir"/. . >/dev/null
   else
     if [ "$pkgurl" == "" ]; then
       if ! curl -fsSL $liburl -o lib; then
@@ -72,42 +80,26 @@ run(){
     else
       echo ""
       echo "Downloading packages..."
-      if ! curl -fsSL $pkgurl -o pkg.tar || ! tar -xf pkg.tar; then
+      if ! curl -fsSL $pkgurl -o archdi.tar.gz || ! tar -xzf archdi.tar.gz --strip-components=2 --wildcards '*/pkg/*'; then
         echo "Unable to download $pkgurl"
         exit 1
       fi
+      rm -f archdi.tar.gz
     fi
+    sed -i "/^baseurl=/c\baseurl=$pkgbaseurl" lib
   fi
   
   chmod 755 lib 2>/dev/null
+  if [ ! "$pkgdir" = "" ]; then
+    sed -i "/^apptitle=/c\apptitle=\"Arch Linux Desktop Install (archdi) - local: $pkgdir (GPLv3)\"" lib
+    sed -i "/^baseurl=/c\baseurl=$pkgdir" lib
+  elif [ ! "$branchoption" = "" ]; then
+    sed -i "/^apptitle=/c\apptitle=\"Arch Linux Desktop Install (archdi) - Branch: $githubuser/$branchoption (GPLv3)\"" lib
+  fi
   if [ "$chrootoption" = "true" ]; then
     ./lib --chroot
-    if [ ! "$?" = "0" ]; then
-      archdi --branch master
-    fi
   else
-    if [ ! "$pkgdir" = "" ]; then
-      sed -i "/apptitle=/c\apptitle=\"Arch Linux Desktop Install (archdi) - local: $pkgdir (GPLv3)\"" lib
-      sed -i "/baseurl=/c\baseurl=$pkgdir" lib
-      ./lib --root
-      if [ ! "$?" = "0" ]; then
-        archdi --branch master
-      fi
-    else
-      if [ "$branchoption" = "" ]; then
-        ./lib --root
-        if [ ! "$?" = "0" ]; then
-          archdi --branch master
-        fi
-      else
-        sed -i "/apptitle=/c\apptitle=\"Arch Linux Desktop Install (archdi) - Branch: $branchoption (GPLv3)\"" lib
-        sed -i "/baseurl=/c\baseurl=https://raw.githubusercontent.com/$githubuser/archdi-pkg/$branchoption" lib
-        ./lib --root
-        if [ ! "$?" = "0" ]; then
-          archdi --branch master
-        fi
-      fi
-    fi
+    ./lib --root
   fi
   
   
@@ -123,15 +115,17 @@ dependencies(){
   lastver=$(curl -fsSL $lastverurl)
   if [ "$?" = "0" ] && [ "${#lastver}" = "19" ]; then
     binurl=$binurl1
-    liburl=$liburl1
+    liburl=""
     pkgurl=$pkgurl1
+    pkgbaseurl=$pkgbaseurl1
   else
     lastverurl=$lastverurl2
     lastver=$(curl -fsSL $lastverurl)
     if [ "$?" = "0" ] && [ "${#lastver}" = "19" ]; then
       binurl=$binurl2
       liburl=$liburl2
-      pkgurl=$pkgurl2
+      pkgurl=""
+      pkgbaseurl=$pkgbaseurl2
     else
       echo "Unable to reach $lastverurl1 or $lastverurl2"
       exit 1
@@ -185,10 +179,7 @@ while (( "$#" )); do
     --chroot) chrootoption="true";;
     -b | --branch)
       shift
-      liburl1=https://raw.githubusercontent.com/$githubuser/archdi-pkg/$1/lib
-      liburl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi-pkg@$1/lib
-      pkgurl1=""
-      pkgurl2=""
+      setpkgurls $githubuser "$1"
       branchoption="$1"
     ;;
     -l | --local)
@@ -198,12 +189,10 @@ while (( "$#" )); do
     ;;
     -t | --test)
       shift
-      liburl1=https://raw.githubusercontent.com/$1/archdi-pkg/$2/lib
-      liburl2=https://raw.githubusercontent.com/$1/archdi-pkg/$2/lib
-      pkgurl1=""
-      pkgurl2=""
-      branchoption="$2"
+      setpkgurls "$1" "$2"
       githubuser="$1"
+      branchoption="$2"
+      shift
     ;;
   esac
   shift
