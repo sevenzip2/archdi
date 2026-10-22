@@ -3,7 +3,7 @@
 
 options=()
 if [ -f /usr/bin/paru ]; then
-  options+=("Upgrade with paru" "paru -Syu")
+  options+=("Upgrade with paru" "paru -Syu --devel")
   aurhelper=1
 fi
 if [ -f /usr/bin/trizen ]; then
@@ -11,7 +11,7 @@ if [ -f /usr/bin/trizen ]; then
   aurhelper=1
 fi
 if [ -f /usr/bin/yay ]; then
-  options+=("Upgrade with yay" "yay -Syu")
+  options+=("Upgrade with yay" "yay -Syu --devel")
   aurhelper=1
 fi
 
@@ -81,13 +81,13 @@ case $sel in
   ;;
   'Upgrade') pacman -Syu;;
   'Upgrade with paru')
-    aurrun paru -Syu
+    aurrun paru -Syu --devel
   ;;
   'Upgrade with trizen')
     aurrun trizen -Syu
   ;;
   'Upgrade with yay')
-    aurrun yay -Syu
+    aurrun yay -Syu --devel
   ;;
   'Clean orphan') pacman -Rns $(pacman -Qqtd);;
   'Clean cache') pacman -Sc;;
@@ -136,13 +136,30 @@ case $sel in
   'Install paru')
     if(confirm "Paru allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall paru (paru-git) ?") then
       clear
-      aurrun sh -c "rm -rf paru-git && git clone https://aur.archlinux.org/paru-git.git && cd paru-git && makepkg -si"
+      if aurrun sh -c "rm -rf paru-git && git clone https://aur.archlinux.org/paru-git.git && cd paru-git && makepkg -si"; then
+        # -git packages are upgraded when their repository changes : Devel in /etc/paru.conf (every user)
+        echo ""
+        echo "Devel in /etc/paru.conf, paru --gendb"
+        sed -i 's/^#\s*Devel$/Devel/' /etc/paru.conf
+        grep -q '^Devel$' /etc/paru.conf || sed -i '/^\[options\]/a Devel' /etc/paru.conf
+        aurrun paru --gendb
+        pressanykey
+      fi
     fi
   ;;
   'Install yay')
     if(confirm "Yay allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall yay (yay-git) ?") then
       clear
-      aurrun sh -c "rm -rf yay-git && git clone https://aur.archlinux.org/yay-git.git && cd yay-git && makepkg -si"
+      if aurrun sh -c "rm -rf yay-git && git clone https://aur.archlinux.org/yay-git.git && cd yay-git && makepkg -si"; then
+        # -git packages are upgraded when their repository changes, yay keeps this setting per user
+        echo ""
+        echo "yay -Y --devel --save, yay -Y --gendb"
+        aurrun yay -Y --devel --save
+        aurrun yay -Y --gendb
+        echo ""
+        echo "To enable it for your own user too, run once : yay -Y --devel --save"
+        pressanykey
+      fi
     fi
   ;;
   'Install pkgstats')
