@@ -398,6 +398,48 @@ svcenable(){
   fi
 }
 
+# $1 : kernel package just installed (linux, linux-lts...)
+# systemd-boot only boots the kernels it has an entry (or a UKI) for, GRUB needs a new grub.cfg
+addkernelboot(){
+  kernel=$1
+  if [ ! -f /boot/vmlinuz-$kernel ]; then
+    return 0
+  fi
+  if [ -f /boot/loader/loader.conf ]; then
+    preset=/etc/mkinitcpio.d/$kernel.preset
+    if grep -qs '^default_uki=' /etc/mkinitcpio.d/*.preset&&[ -f $preset ]&&! grep -q '^default_uki=' $preset; then
+      # The other kernels use Unified Kernel Images, systemd-boot finds them in EFI/Linux
+      echo "UKI for $kernel : $preset"
+      sed -i -e "s|^#\?default_uki=.*|default_uki=\"/boot/EFI/Linux/arch-$kernel.efi\"|" \
+        -e "s|^#\?fallback_uki=.*|fallback_uki=\"/boot/EFI/Linux/arch-$kernel-fallback.efi\"|" \
+        -e "s|^default_image=|#default_image=|" \
+        -e "s|^fallback_image=|#fallback_image=|" $preset
+      echo "mkinitcpio -p $kernel"
+      mkinitcpio -p $kernel
+    elif [ ! -f /boot/loader/entries/arch-$kernel.conf ]&&[ -f /boot/initramfs-$kernel.img ]; then
+      # Copy an existing entry (kernel options, microcode) and point it to the new kernel
+      template=$(ls /boot/loader/entries/*.conf 2>/dev/null | grep -v fallback | head -n1)
+      if [ "$template" = "" ]; then
+        echo "No systemd-boot entry to copy, create one in Config > Boot > systemd-boot > Entries."
+      else
+        for variant in "" "-fallback"; do
+          if [ -f /boot/initramfs-$kernel$variant.img ]; then
+            echo "/boot/loader/entries/arch-$kernel$variant.conf"
+            sed -e "s|^title .*|title   Arch Linux ($kernel$variant)|" \
+              -e "s|/vmlinuz-[^ ]*|/vmlinuz-$kernel|" \
+              -e "s|/initramfs-[^ ]*\.img|/initramfs-$kernel$variant.img|" \
+              $template > /boot/loader/entries/arch-$kernel$variant.conf
+          fi
+        done
+      fi
+    fi
+  fi
+  if [ -f /boot/grub/grub.cfg ]; then
+    echo "grub-mkconfig -o /boot/grub/grub.cfg"
+    grub-mkconfig -o /boot/grub/grub.cfg
+  fi
+}
+
 # $1 : display manager service
 # $2 : [displayname]
 # Only one display-manager.service can be enabled, disable the current one first

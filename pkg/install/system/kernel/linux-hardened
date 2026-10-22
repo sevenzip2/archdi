@@ -20,5 +20,8 @@ for itm in $sel; do
 done
 
 instpkg "$pkg" "$aurpkg"
+clear
+addkernelboot linux-hardened
+pressanykey
 
 exit 0
