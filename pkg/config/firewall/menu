@@ -1,0 +1,78 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("ufw" "Simple firewall (recommended)")
+options+=("firewalld" "Zone based firewall")
+options+=("iptables" "(legacy) Hand written iptables rules")
+if [ -f /usr/bin/ufw ]; then
+  options+=("" "")
+  options+=("ufw status" "ufw status verbose")
+fi
+
+defaultitem=""
+sel=$(dialog --backtitle "$apptitle" --title "Firewall Menu :" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
+
+# Only one firewall should manage the rules
+# $1 : firewall to keep
+disableotherfirewalls(){
+  for svc in ufw firewalld iptables ip6tables; do
+    if [ ! "$svc" = "$1" ]&&systemctl is-enabled -q $svc 2>/dev/null; then
+      echo "systemctl disable --now $svc"
+      systemctl disable --now $svc
+    fi
+  done
+}
+
+case $sel in
+  'ufw')
+    instpkg "ufw" ""
+    if [ ! -f /usr/bin/ufw ]; then
+      exit 0
+    fi
+    clear
+    disableotherfirewalls ufw
+    echo "ufw default deny incoming"
+    ufw default deny incoming
+    echo "ufw default allow outgoing"
+    ufw default allow outgoing
+    if [ -f /usr/bin/sshd ]&&(confirm "Allow incoming SSH connections ?"); then
+      echo "ufw allow ssh"
+      ufw allow ssh
+    fi
+    echo "ufw enable"
+    ufw --force enable
+    pressanykey
+    svcenable ufw "Firewall at boot"
+  ;;
+  'firewalld')
+    instpkg "firewalld" ""
+    if [ ! -f /usr/bin/firewall-offline-cmd ]; then
+      exit 0
+    fi
+    clear
+    disableotherfirewalls firewalld
+    # firewall-offline-cmd works before the daemon is started
+    if [ -f /usr/bin/sshd ]&&(confirm "Allow incoming SSH connections ?"); then
+      echo "firewall-offline-cmd --add-service=ssh"
+      firewall-offline-cmd --add-service=ssh
+    fi
+    pressanykey
+    svcenable firewalld "Firewall at boot"
+    svcstart firewalld "Firewall"
+  ;;
+  'iptables') menu config/firewall/iptables;;
+  'ufw status')
+    clear
+    ufw status verbose
+    pressanykey
+  ;;
+esac
+
+exit 0

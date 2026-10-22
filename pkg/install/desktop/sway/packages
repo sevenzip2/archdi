@@ -1,0 +1,44 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("sway" "Compositor" on)
+options+=("xdg-desktop-portal-wlr" "Screen sharing portal" on)
+options+=("polkit-gnome" "Polkit agent" on)
+options+=("foot" "Default terminal" on)
+options+=("waybar" "Status bar" on)
+options+=("fuzzel" "App launcher" on)
+options+=("mako" "Notifications" on)
+options+=("swaybg" "Wallpaper" on)
+options+=("swaylock" "Screen locker" on)
+options+=("swayidle" "Idle daemon" on)
+options+=("grim" "Screenshot" on)
+options+=("slurp" "Region selection for grim" on)
+options+=("wl-clipboard" "Clipboard tools" on)
+options+=("brightnessctl" "Backlight control" on)
+options+=("network-manager-applet" "Network tray applet" on)
+options+=("pavucontrol" "Volume control" on)
+options+=("xdg-desktop-portal-gtk" "File chooser portal" on)
+options+=("nwg-look" "GTK theme settings" off)
+options+=("qt6ct" "Qt6 theme settings" off)
+
+sel=$(dialog --backtitle "$apptitle" --title "Sway Install :" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  pkg="$pkg $(echo $itm | sed 's/"//g')"
+done
+
+instpkg "$pkg" "$aurpkg"
+
+clear
+echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"
+echo "  sway"
+echo "Copy /etc/sway/config to ~/.config/sway/config to customize it."
+pressanykey
+
+exit 0

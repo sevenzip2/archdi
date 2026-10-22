@@ -1,0 +1,62 @@
+#!/bin/bash
+
+prjname=archdi
+version=$(date +"%Y.%m.%d.%H.%M.%S")
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+clear
+read -p "Current branch is $branch. Continue ? (y/N)" choice
+case "$choice" in 
+  n|N|'' )
+    echo "cancel build !"
+    exit 1
+  ;;
+  y|Y ) echo "Begin Build Release...";;
+  * )
+    echo "cancel build !"
+    exit 1
+  ;;
+esac
+echo "Building version $version..."
+echo ""
+
+echo "Finalise lib script..."
+sed -i /^apptitle=/c\apptitle=\""Arch Linux Desktop Install (archdi) - Version: $version (GPLv3)"\" lib
+sed -i /^baseurl=/c\baseurl=https://raw.githubusercontent.com/sevenzip2/archdi-pkg/master lib
+
+rm pkg.tar
+tar -cf pkg.tar *
+
+echo "Make last commit..."
+git commit -a -m "New Release : $version"
+
+if [ ! "$branch" = "master" ]; then
+  echo "Merge branch $branch to master..."
+  git checkout master
+  git pull
+  git merge $branch
+
+  read -p "Delete branch $branch ? (y/N)" choice
+  case "$choice" in 
+    y|Y )
+      git branch -D $branch
+    ;;
+  esac
+fi
+
+read -p "Push release ? (Y/n)" choice
+case "$choice" in 
+  n|N )
+    exit 1
+  ;;
+esac
+
+echo "Push release..."
+git push
+
+
+if [ ! "$branch" = "master" ]; then
+  git checkout $branch
+  git merge master
+  git push
+fi

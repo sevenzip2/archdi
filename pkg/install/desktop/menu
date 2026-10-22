@@ -1,0 +1,48 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("Plasma" "KDE Plasma 6")
+options+=("XFCE4" "(Help Wanted)")
+options+=("Gnome" "(Help Wanted)")
+options+=("Cinnamon" "By FredBezies")
+options+=("COSMIC" "Wayland desktop by System76")
+options+=("Hyprland" "Wayland tiling compositor")
+options+=("Sway" "Wayland i3-like compositor")
+options+=("niri" "Wayland scrollable tiling compositor")
+options+=("LXDE" "(Help Wanted)")
+options+=("LXQt" "(Help Wanted)")
+options+=("Mate" "(By FredBezies)")
+options+=("Enlightenment" "(Help Wanted)")
+options+=("Openbox" "(Help Wanted)")
+options+=("Deepin" "(Help Wanted)")
+#options+=("GnuStep" "")
+#options+=("i3" "")
+
+defaultitem=""
+sel=$(dialog --backtitle "$apptitle" --title "Install Desktop Menu :" --default-item "$defaultitem" --cancel-button "Back" --menu "First item is most maintained" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
+
+case $sel in
+  'Plasma') menu install/desktop/plasma5/menu;;
+  'XFCE4') menu install/desktop/xfce4/menu;;
+  'Gnome') menu install/desktop/gnome/menu;;
+  'Cinnamon') menu install/desktop/cinnamon/menu;;
+  'COSMIC') script install/desktop/cosmic/packages;;
+  'Hyprland') script install/desktop/hyprland/packages;;
+  'Sway') script install/desktop/sway/packages;;
+  'niri') script install/desktop/niri/packages;;
+  'LXDE') script install/desktop/lxde/packages;;
+  'LXQt') menu install/desktop/lxqt/menu;;
+  'Mate') menu install/desktop/mate/menu;;
+  'Enlightenment') script install/desktop/enlightenment/packages;;
+  'Openbox') script install/desktop/openbox/packages;;
+  'Deepin') menu install/desktop/deepin/menu;;
+esac
+
+exit 0

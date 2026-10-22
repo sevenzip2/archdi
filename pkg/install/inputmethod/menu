@@ -1,0 +1,22 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("Input Method" "fcitx5, ibus, kime, nimf, uim")
+options+=("Korean Fonts" "")
+
+defaultitem=""
+sel=$(dialog --backtitle "$apptitle" --title "Input Method Menu :" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
+
+case $sel in
+  'Input Method') script install/inputmethod/setup;;
+  'Korean Fonts') script install/inputmethod/fonts;;
+esac
+
+exit 0

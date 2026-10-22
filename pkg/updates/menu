@@ -1,0 +1,203 @@
+#!/bin/bash
+. ./lib
+
+options=()
+if [ -f /usr/bin/paru ]; then
+  options+=("Upgrade with paru" "paru -Syu")
+  aurhelper=1
+fi
+if [ -f /usr/bin/trizen ]; then
+  options+=("Upgrade with trizen" "trizen -Syu")
+  aurhelper=1
+fi
+if [ -f /usr/bin/yay ]; then
+  options+=("Upgrade with yay" "yay -Syu")
+  aurhelper=1
+fi
+
+if [ -f /usr/bin/lynx ] || [ -f /usr/bin/elinks ] || [ -f /usr/bin/links ]; then
+  options+=("Latest News" "")
+  options+=("" "")
+fi
+
+options+=("Upgrade" "pacman -Syu")
+options+=("Clean orphan" "pacman -Rns \$(pacman -Qqtd)")
+options+=("Clean cache" "pacman -Sc")
+options+=("" "")
+options+=("Edit pacman.conf" "")
+options+=("Edit mirrorlist" "")
+options+=("" "")
+options+=("Update keyring" "pacman -S archlinux-keyring")
+options+=("Refresh pacman keys" "pacman-key --refresh-keys")
+options+=("Add GPG key" "gpg --recv-keys")
+options+=("" "")
+if [ -f /var/lib/pacman/db.lck ]; then
+  options+=("Remove db.lck" "rm /var/lib/pacman/db.lck")
+  options+=("" "")
+fi
+if [ "$aurhelper" = "1" ]; then
+  if [ ! -f /usr/bin/downgrade ]; then
+    options+=("Install downgrade" "(AUR)")
+    options+=("" "")
+  fi
+options+=("" "")
+fi
+if [ ! -f /usr/bin/pkgstats ]; then
+  options+=("Install pkgstats" "")
+fi
+if [ ! -f /usr/bin/paru ]; then
+  options+=("Install paru" "")
+fi
+if [ ! -f /usr/bin/trizen ]; then
+  options+=("Install trizen" "")
+fi
+if [ ! -f /usr/bin/yay ]; then
+  options+=("Install yay" "")
+fi
+if [ ! -f /usr/bin/pacdiff ]; then
+  options+=("" "")
+  options+=("Install pacman-contrib" "")
+fi
+
+sel=$(dialog --backtitle "$apptitle" --title "Updates Menu :" --cancel-button "Back" --menu "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+checkaurdependencies(){
+  if [ ! -f /usr/bin/automake ]; then
+    pacman -S --needed base-devel
+  fi
+  if [ ! -f /usr/bin/git ]; then
+    pacman -S --needed git
+  fi
+  if [ ! $(id -u "aurbuilder") ]; then
+    newpass=$(< /dev/urandom tr -dc "@#*%&_A-Z-a-z-0-9" | head -c16)
+    useradd -r -N -M -d /tmp/aurbuilder -s /usr/bin/nologin aurbuilder
+    echo -e "$newpass\n$newpass\n"|passwd aurbuilder
+    newpass=""
+    mkdir /tmp/aurbuilder 1&>/dev/null
+    chmod 777 /tmp/aurbuilder
+  else
+    mkdir /tmp/aurbuilder 1&>/dev/null
+    chmod 777 /tmp/aurbuilder
+    usermod -d /tmp/aurbuilder aurbuilder
+  fi
+  # aurbuilder only needs pacman (makepkg -si, AUR helpers), not a full root shell
+  aurbuildersudoers="aurbuilder ALL=(ALL) NOPASSWD: /usr/bin/pacman\nroot ALL=(aurbuilder) NOPASSWD: ALL"
+  if [ ! "$(cat /etc/sudoers.d/aurbuilder 2>/dev/null)" = "$(echo -e "$aurbuildersudoers")" ]; then
+    writesudoers aurbuilder "$aurbuildersudoers"
+  fi
+}
+
+clear
+case $sel in
+  'Latest News')
+    newsurl='https://archlinux.org/news/'
+    if [ -f /usr/bin/lynx ]; then
+      /usr/bin/lynx ${newsurl}
+    else
+      if [ -f /usr/bin/elinks ]; then
+        /usr/bin/elinks ${newsurl}
+      else
+        if [ -f /usr/bin/links ]; then
+          /usr/bin/links ${newsurl}
+        fi
+      fi
+    fi
+  ;;
+  'Upgrade') pacman -Syu;;
+  'Upgrade with paru')
+    checkaurdependencies
+    sudo -u aurbuilder paru -Syu
+  ;;
+  'Upgrade with trizen')
+    checkaurdependencies
+    sudo -u aurbuilder trizen -Syu
+  ;;
+  'Upgrade with yay')
+    checkaurdependencies
+    sudo -u aurbuilder yay -Syu
+  ;;
+  'Clean orphan') pacman -Rns $(pacman -Qqtd);;
+  'Clean cache') pacman -Sc;;
+  'Edit pacman.conf') editfile /etc/pacman.conf;;
+  'Edit mirrorlist') editfile /etc/pacman.d/mirrorlist;;
+  'Update keyring') pacman -S archlinux-keyring;;
+  'Refresh pacman keys') pacman-key --refresh-keys;;
+  'Add GPG key')
+    gpgservers=()
+    gpgservers+=("keyserver.ubuntu.com" "")
+    gpgservers+=("keys.openpgp.org" "")
+    gpgservers+=("Other" "")
+    sel=$(dialog --backtitle "$apptitle" --title "Add GPG key" --menu "GPG key server" 0 0 0 "${gpgservers[@]}" 3>&1 1>&2 2>&3)
+    if [ "$?" = "0" ]; then
+      case $sel in
+        "Other")
+          gpgserver=$(dialog --backtitle "$apptitle" --title "Add GPG key" --inputbox "Enter the GPG key server :" 0 0 "" 3>&1 1>&2 2>&3)
+          if [ "$?" = "0" ]; then
+            gpgkey=$(dialog --backtitle "$apptitle" --title "Add GPG key" --inputbox "Enter the GPG key :" 0 0 3>&1 1>&2 2>&3)
+            if [ "$?" = "0" ]; then
+              echo "sudo -u aurbuilder gpg --keyserver "$gpgserver" --recv-keys "$gpgkey
+              sudo -u aurbuilder gpg --keyserver $gpgserver --recv-keys $gpgkey
+              pressanykey
+            fi
+          fi
+        ;;
+        *)
+          gpgserver=$sel
+          gpgkey=$(dialog --backtitle "$apptitle" --title "Add GPG key" --inputbox "Enter the GPG key :" 0 0 3>&1 1>&2 2>&3)
+          if [ "$?" = "0" ]; then
+            echo "sudo -u aurbuilder gpg --keyserver "$gpgserver" --recv-keys "$gpgkey
+            sudo -u aurbuilder gpg --keyserver $gpgserver --recv-keys $gpgkey
+            pressanykey
+          fi
+        ;;
+      esac
+    fi
+  ;;
+  'Remove db.lck') rm /var/lib/pacman/db.lck;;
+  'Install pacman-contrib')
+    instpkg "pacman-contrib" ""
+  ;;
+  'Install downgrade')
+    instpkg "" "downgrade"
+  ;;
+  'Install paru')
+    if(confirm "Paru allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall paru (paru-bin) ?") then
+      clear
+      checkaurdependencies
+      cd /tmp/aurbuilder
+      sudo -u aurbuilder git clone https://aur.archlinux.org/paru-bin.git
+      cd paru-bin
+      sudo -u aurbuilder makepkg -si
+    fi
+  ;;
+  'Install trizen')
+    if(confirm "Trizen allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall trizen ?") then
+      clear
+      checkaurdependencies
+      cd /tmp/aurbuilder
+      sudo -u aurbuilder git clone https://aur.archlinux.org/trizen.git
+      cd trizen
+      sudo -u aurbuilder makepkg -si
+    fi
+  ;;
+  'Install yay')
+    if(confirm "Yay allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall yay ?") then
+      clear
+      checkaurdependencies
+      cd /tmp/aurbuilder
+      sudo -u aurbuilder git clone https://aur.archlinux.org/yay.git
+      cd yay
+      sudo -u aurbuilder makepkg -si
+    fi
+  ;;
+  'Install pkgstats')
+    pacman -S --needed pkgstats
+  ;;
+esac
+
+exit 0

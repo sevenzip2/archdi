@@ -1,0 +1,57 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("Config" "/boot/loader/loader.conf")
+options+=("Entries" "/boot/loader/entries")
+options+=("" "")
+options+=("Update" "bootctl update")
+options+=("" "")
+# systemd-boot-update.service updates the boot loader after systemd upgrades (replaces the old pacman hook)
+if systemctl is-enabled -q systemd-boot-update.service 2>/dev/null; then
+  options+=("Disable auto update" "systemd-boot-update.service")
+else
+  options+=("Enable auto update" "systemd-boot-update.service")
+fi
+if [ -f /etc/pacman.d/hooks/systemd-boot.hook ]; then
+  options+=("Delete old pacman hook" "/etc/pacman.d/hooks/systemd-boot.hook")
+fi
+
+defaultitem="Config"
+sel=$(dialog --backtitle "$apptitle" --title "Systemd Config Menu :" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
+
+case $sel in
+  'Config')
+    defaultitem="Config"
+    editfile /boot/loader/loader.conf
+  ;;
+  'Entries')
+    defaultitem="Entries"
+    menu config/boot/systemd/entries
+  ;;
+  'Update')
+    defaultitem="Update"
+    clear
+    bootctl update
+    pressanykey
+  ;;
+  'Enable auto update')
+    svcenable systemd-boot-update.service "systemd-boot auto update"
+  ;;
+  'Disable auto update')
+    svcdisable systemd-boot-update.service "systemd-boot auto update"
+  ;;
+  'Delete old pacman hook')
+    if (confirm "Delete /etc/pacman.d/hooks/systemd-boot.hook ?\n\nUse systemd-boot-update.service instead.") then
+      rm /etc/pacman.d/hooks/systemd-boot.hook
+    fi
+  ;;
+esac
+
+exit 0

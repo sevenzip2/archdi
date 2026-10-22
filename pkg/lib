@@ -1,0 +1,364 @@
+#!/bin/bash
+
+
+# Arch Linux Desktop Install (archdi)
+# -----------------------------------
+# author    : MatMoul (original author)
+#             https://github.com/MatMoul
+# maintainer: sevenzip2 (fork)
+#             https://github.com/sevenzip2
+# project   : https://github.com/sevenzip2/archdi
+# upstream  : https://github.com/MatMoul/archdi
+# license   : GPLv3 (http://opensource.org/licenses/GPL-3.0)
+
+
+
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2022.11.20.22.42.58 (GPLv3)"
+baseurl=https://raw.githubusercontent.com/sevenzip2/archdi-pkg/master
+cachedir=~/.cache/archdi
+
+
+cat << EOF > dialog.archfi
+use_shadow = OFF
+title_color = (BLACK,WHITE,OFF)
+button_label_active_color = (WHITE,BLUE,ON)
+button_label_inactive_color = (BLACK,WHITE,OFF)
+tag_color = (BLACK,WHITE,OFF)
+tag_selected_color = (WHITE,BLUE,ON)
+tag_key_color = (BLACK,WHITE,OFF)
+tag_key_selected_color = (WHITE,BLUE,ON)
+check_color = tag_color
+check_selected_color = tag_selected_color
+EOF
+export DIALOGRC="dialog.archfi"
+
+
+# $1: path
+menu(){
+  require $1 755 || return 1
+  $cachedir/$1
+  if [ $? = 0 ]; then
+    menu $1
+  fi
+}
+
+
+# $1: path
+script(){
+  require $1 755 || return 1
+  $cachedir/$1
+}
+
+
+# echo the installed AUR helper (paru, yay or trizen)
+getaurhelper(){
+  for helper in paru yay trizen; do
+    if [ -f /usr/bin/$helper ]; then
+      echo $helper
+      return 0
+    fi
+  done
+  return 1
+}
+
+
+# $1: pacman packages
+# $2: aur packages
+instpkg(){
+  if [ ! "$1" = "" ]; then
+    clear
+    echo "# pacman -S --needed $1"
+    pacman -S --needed $1
+    pressanykey
+  fi
+  if [ ! "$2" = "" ]; then
+    aurhelper=$(getaurhelper)
+    if [ "$aurhelper" = "" ]; then
+      echo "To install AUR packages, you need to install an aurhelper in updates menu !"
+    else
+      clear
+      echo "# sudo -u aurbuilder $aurhelper -S --needed $2"
+      sudo -u aurbuilder $aurhelper -S --needed $2
+      pressanykey
+    fi
+  fi
+}
+
+
+# $1: string
+# $2: [title]
+choosepkg(){
+  if [ "$2" = "" ]; then
+    title=$1
+  else
+    title=$2
+  fi
+  options=()
+  items=$(pacman -Ssq $1)
+  for item in $items; do
+    options+=("$item" "" off)
+  done
+  sel=$(dialog --backtitle "$apptitle" --title "$title" --cancel-button "Back" --checklist "" 0 0 0 \
+    "${options[@]}" \
+    3>&1 1>&2 2>&3)
+  if [ ! "$?" = "0" ]; then
+    return 1
+  fi
+  for itm in $sel; do
+    pkg="$pkg $(echo $itm | sed 's/"//g')"
+  done
+  instpkg "$pkg" "$aurpkg"
+  return 0
+}
+
+
+# $1: string
+# $2: [title]
+chooseaurpkg(){
+  if [ "$2" = "" ]; then
+    title=$1
+  else
+    title=$2
+  fi
+  options=()
+  aurhelper=$(getaurhelper)
+  if [ ! "$aurhelper" = "" ]; then
+    items=$($aurhelper -Ssq $1)
+  fi
+  for item in $items; do
+    options+=("$item" "" off)
+  done
+  sel=$(dialog --backtitle "$apptitle" --title "$title" --cancel-button "Back" --checklist "" 0 0 0 \
+    "${options[@]}" \
+    3>&1 1>&2 2>&3)
+  if [ ! "$?" = "0" ]; then
+    return 1
+  fi
+  for itm in $sel; do
+    aurpkg="$aurpkg $(echo $itm | sed 's/"//g')"
+  done
+  instpkg "$pkg" "$aurpkg"
+  return 0
+}
+
+
+# $1: path
+# $2: chmod
+require(){
+  if [ ! -f "$cachedir/$1" ]; then
+    mkdir -p $cachedir/$(dirname $1) 2> /dev/null
+    # -f: never save (and later run) an HTTP error page as a script
+    if ! curl -fsSL "$baseurl/$1" -o "$cachedir/$1"; then
+      rm -f "$cachedir/$1"
+      echo "Unable to download $baseurl/$1"
+      pressanykey
+      cd $cachedir
+      return 1
+    fi
+  fi
+  chmod $2 $cachedir/$1
+  cd $cachedir
+}
+
+
+# $1 : message
+# $2 : args
+confirm(){
+  dialog --backtitle "$apptitle" $2 --yesno "$1" 0 0
+}
+
+
+pressanykey(){
+  read -n1 -p "Press any key to continue."
+}
+
+
+# $1 : filename
+editfile(){
+  editor=$EDITOR
+  if [ "$editor" == "" ]; then
+    editor="nano"
+  fi
+  if [ ! -f "/usr/bin/$editor" ]; then
+    editor="nano"
+  fi
+  echo "$editor $1"
+  $editor "$1"
+}
+
+
+# Enable the [multilib] repository (32-bit packages : steam, wine, lib32-*)
+enablemultilib(){
+  if grep -q '^\[multilib\]' /etc/pacman.conf; then
+    return 0
+  fi
+  if (confirm "32-bit packages need the multilib repository.\n\nUncomment [multilib] in /etc/pacman.conf and run pacman -Syu ?") then
+    clear
+    sed -i '/^#\[multilib\]/{s/^#//;n;s/^#//}' /etc/pacman.conf
+    pacman -Syu
+    return 0
+  fi
+  return 1
+}
+
+
+# $1 : user name
+validusername(){
+  [[ "$1" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]]
+}
+
+
+# $1 : file name in /etc/sudoers.d
+# $2 : content
+# Validate with visudo before installing, a broken sudoers file locks sudo
+writesudoers(){
+  tmpfile=$(mktemp)
+  echo -e "$2" > $tmpfile
+  if visudo -cqf $tmpfile; then
+    install -m 0440 -o root -g root $tmpfile /etc/sudoers.d/$1
+    rm -f $tmpfile
+    return 0
+  fi
+  echo "Invalid sudoers content, /etc/sudoers.d/$1 not changed"
+  rm -f $tmpfile
+  pressanykey
+  return 1
+}
+
+
+# $1 : sudoers file, edited with visudo (syntax check before save)
+editsudoers(){
+  editor=$EDITOR
+  if [ "$editor" == "" ]||[ ! -f "/usr/bin/$editor" ]; then
+    editor="nano"
+  fi
+  echo "visudo -f $1"
+  EDITOR=$editor visudo -f "$1"
+}
+
+
+# $1 : servicename
+# $2 : [displayname]
+svcstart(){
+  if [ "$2" = "" ]; then
+    displayname="$1"
+  else
+    displayname="$2 ($1)"
+  fi
+  if (confirm "Start $displayname service ?\n\nsystemctl start $1") then
+    clear
+    echo "systemctl start $1"
+    systemctl start $1
+    pressanykey
+  else
+    exit 1
+  fi
+}
+
+# $1 : servicename
+# $2 : [displayname]
+svcrestart(){
+  if [ "$2" = "" ]; then
+    displayname="$1"
+  else
+    displayname="$2 ($1)"
+  fi
+  if (confirm "Restart $displayname service ?\n\nsystemctl restart $1") then
+    clear
+    echo "systemctl restart $1"
+    systemctl restart $1
+    pressanykey
+  else
+    exit 1
+  fi
+}
+
+# $1 : servicename
+# $2 : [displayname]
+svcstop(){
+  if [ "$2" = "" ]; then
+    displayname="$1"
+  else
+    displayname="$2 ($1)"
+  fi
+  if (confirm "Stop $displayname service ?\n\nsystemctl stop $1") then
+    clear
+    echo "systemctl stop $1"
+    systemctl stop $1
+    pressanykey
+  else
+    exit 1
+  fi
+}
+
+# $1 : servicename
+# $2 : [displayname]
+svcenable(){
+  if [ "$2" = "" ]; then
+    displayname="$1"
+  else
+    displayname="$2 ($1)"
+  fi
+  if (confirm "Start $displayname service at boot ?\n\nsystemctl enable $1") then
+    clear
+    echo "systemctl enable $1"
+    systemctl enable $1
+    pressanykey
+  #else
+  #  exit 1
+  fi
+}
+
+# $1 : display manager service
+# $2 : [displayname]
+# Only one display-manager.service can be enabled, disable the current one first
+dmenable(){
+  current=$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)
+  current=${current##*/}
+  if [ ! "$current" = "" ]&&[ ! "$current" = "$1.service" ]&&[ ! "$current" = "$1" ]; then
+    if (confirm "$current is the current display manager.\n\nReplace it with $1 ?") then
+      clear
+      echo "systemctl disable $current"
+      systemctl disable $current
+    else
+      return 1
+    fi
+  fi
+  svcenable $1 "$2"
+}
+
+# $1 : servicename
+# $2 : [displayname]
+svcdisable(){
+  if [ "$2" = "" ]; then
+    displayname="$1"
+  else
+    displayname="$2 ($1)"
+  fi
+  if (confirm "Disable $displayname service at boot ?\n\nsystemctl disable $1") then
+    clear
+    echo "systemctl disable $1"
+    systemctl disable $1
+    pressanykey
+  #else
+  #  exit 1
+  fi
+}
+
+
+
+while (( "$#" )); do
+  case $1 in
+    --root)
+      menu menu
+      exit 0
+    ;;
+    --chroot)
+      require menu 755
+      sed -i "/options+=(\"Shutdown\" \"\")/d" menu
+      menu menu
+      exit 0
+    ;;
+  esac
+  shift
+done

@@ -1,0 +1,35 @@
+#!/bin/bash
+. ./lib
+
+options=()
+
+items=$(for i in $(pacman -Sqs meta | grep kde); do echo ${i} | sed 's/-meta//';done)
+for item in $items; do
+  case $item in
+    "kde-graphics") options+=("$item" "" on);;
+    "kde-multimedia") options+=("$item" "" on);;
+    "kde-network") options+=("$item" "" on);;
+    "kde-system") options+=("$item" "" on);;
+    "kde-utilities") options+=("$item" "" on);;
+    "kde-applications") ;;
+    "kde-development-environment") ;;
+    "kde-sdk") ;;
+    *) options+=("$item" "" off);;
+  esac
+done
+
+sel=$(dialog --backtitle "$apptitle" --title "KDE Apps Meta Packages :" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  pkg="$pkg $(echo $itm | sed 's/"//g')"
+done
+
+instpkg "$pkg" "$aurpkg"
+
+exit 0

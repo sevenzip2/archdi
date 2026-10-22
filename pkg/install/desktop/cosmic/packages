@@ -1,0 +1,30 @@
+#!/bin/bash
+. ./lib
+
+options=()
+
+items=$(pacman -Sqg cosmic)
+for item in $items; do
+  options+=("$item" "" on)
+done
+
+sel=$(dialog --backtitle "$apptitle" --title "COSMIC Install :" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  pkg="$pkg $(echo $itm | sed 's/"//g')"
+done
+
+instpkg "$pkg" "$aurpkg"
+
+for itm in $sel; do
+  case $itm in
+    'cosmic-greeter') dmenable cosmic-greeter "COSMIC Greeter";;
+  esac
+done
+
+exit 0

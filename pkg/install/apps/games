@@ -1,0 +1,50 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("steam" "(multilib) Steam, Proton" on)
+options+=("gamemode" "Performance mode for games" on)
+options+=("lib32-gamemode" "(multilib) 32-bit gamemode" on)
+options+=("mangohud" "FPS / GPU overlay" off)
+options+=("lib32-mangohud" "(multilib) 32-bit mangohud" off)
+options+=("gamescope" "Gaming micro-compositor" off)
+options+=("lutris" "Game manager (Wine, emulators)" off)
+options+=("prismlauncher" "Minecraft launcher" off)
+options+=("heroic-games-launcher-bin" "(AUR) Epic, GOG, Amazon games" off)
+options+=("protonup-qt" "(AUR) Proton-GE / Wine-GE manager" off)
+
+sel=$(dialog --backtitle "$apptitle" --title "Games :" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+multilib="false"
+for itm in $sel; do
+  case $itm in
+    "steam" | \
+    "lib32-gamemode" | \
+    "lib32-mangohud")
+      multilib="true"
+      pkg="$pkg $(echo $itm | sed 's/"//g')"
+    ;;
+    "heroic-games-launcher-bin" | \
+    "protonup-qt") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
+  esac
+done
+
+if [ "$multilib" = "true" ]; then
+  if ! enablemultilib; then
+    exit 1
+  fi
+fi
+
+instpkg "$pkg" "$aurpkg"
+
+if [[ "$pkg" == *"gamemode"* ]]; then
+  dialog --backtitle "$apptitle" --title "Games" --msgbox "Add your user to the gamemode group :\n\nusermod -aG gamemode <user>\n\nSteam : launch options gamemoderun %command%" 0 0
+fi
+
+exit 0

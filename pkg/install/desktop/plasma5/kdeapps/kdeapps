@@ -1,0 +1,62 @@
+#!/bin/bash
+. ./lib
+
+options=()
+
+items=$(pacman -Sqg kde-applications)
+for item in $items; do
+  case $item in
+    "ark" | \
+    "audiocd-kio" | \
+    "dolphin" | \
+    "elisa" | \
+    "ffmpegthumbs" | \
+    "filesharing" | \
+    "gwenview" | \
+    "kate" | \
+    "kcalc" | \
+    "kcharselect" | \
+    "kcolorchooser" | \
+    "kcron" | \
+    "kdegraphics-mobipocket" | \
+    "kdegraphics-thumbnailers" | \
+    "kdenetwork-filesharing" | \
+    "kdesdk-thumbnailers" | \
+    "kdialog" | \
+    "kfind" | \
+    "kgpg" | \
+    "kio-extras" | \
+    "kio-zeroconf" | \
+    "kolourpaint" | \
+    "konsole" | \
+    "ksystemlog" | \
+    "kwalletmanager" | \
+    "kwrite" | \
+    "markdownpart" | \
+    "okular" | \
+    "partitionmanager" | \
+    "print-manager" | \
+    "signon-kwallet-extension" | \
+    "spectacle" | \
+    "svgpart" | \
+    "thumbnailers" | \
+    "zeroconf-ioslave") options+=("$item" "" on);;
+    *) options+=("$item" "" off);;
+  esac
+done
+
+sel=$(dialog --backtitle "$apptitle" --title "$package Install :" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  pkg="$pkg $(echo $itm | sed 's/"//g')"
+done
+
+instpkg "$pkg" "$aurpkg"
+
+exit 0

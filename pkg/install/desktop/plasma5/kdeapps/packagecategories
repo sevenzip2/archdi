@@ -1,0 +1,43 @@
+#!/bin/bash
+. ./lib
+
+options=()
+
+options+=("kde-system" "")
+options+=("kde-utilities" "")
+options+=("kde-network" "")
+options+=("kde-graphics" "")
+options+=("kde-multimedia" "")
+options+=("kdesdk" "")
+options+=("kde-pim" "")
+items=$(for i in $(pacman -Sqs meta | grep kde); do echo ${i} | sed 's/-meta//';done)
+for item in $items; do
+  case $item in
+    "kde-system") ;;
+    "kde-utilities") ;;
+    "kde-network") ;;
+    "kde-graphics") ;;
+    "kde-multimedia") ;;
+    "kdesdk") ;;
+    "kde-pim") ;;
+    "kde-applications") ;;
+    "kde-development-environment") ;;
+    "kde-sdk") ;;
+    *) options+=("$item" "");;
+  esac
+done
+
+defaultitem=""
+sel=$(dialog --backtitle "$apptitle" --title "KDE Apps Categories :" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
+
+require install/desktop/plasma5/kdeapps/packages 755
+sed -i "/^package=/c\package=\"$sel\"" install/desktop/plasma5/kdeapps/packages
+script install/desktop/plasma5/kdeapps/packages
+
+exit 0

@@ -1,0 +1,73 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("gdm" "GNOME Login")
+options+=("sddm" "Qt Login (KDE Plasma)")
+options+=("plasma-login-manager" "New KDE Plasma Login")
+options+=("cosmic-greeter" "COSMIC Login")
+options+=("ly" "TUI Login, any session")
+options+=("greetd" "greetd + tuigreet, TUI Login")
+options+=("lightdm-gtk-greeter" "LightDM GTK Login")
+options+=("lxdm" "(legacy) LXDE Login")
+
+defaultitem=""
+sel=$(dialog --backtitle "$apptitle" --title "Install Display Manager Menu :" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
+
+case $sel in
+  "gdm")
+    instpkg gdm
+    dmenable gdm
+  ;;
+  "sddm")
+    instpkg sddm
+    dmenable sddm
+  ;;
+  "plasma-login-manager")
+    instpkg plasma-login-manager
+    dmenable plasmalogin "Plasma Login Manager"
+  ;;
+  "cosmic-greeter")
+    instpkg cosmic-greeter
+    dmenable cosmic-greeter "COSMIC Greeter"
+  ;;
+  "ly")
+    instpkg ly
+    dmenable ly@tty2 "Ly"
+    # ly runs on tty2 instead of its getty
+    if systemctl is-enabled -q ly@tty2.service 2>/dev/null; then
+      systemctl disable getty@tty2.service
+    fi
+  ;;
+  "greetd")
+    instpkg "greetd greetd-tuigreet"
+    if [ -f /etc/greetd/config.toml ]&&[ ! -f /etc/greetd/config.toml.archdi.bak ]; then
+      cp /etc/greetd/config.toml /etc/greetd/config.toml.archdi.bak
+    fi
+    cat << EOF > /etc/greetd/config.toml
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --time --remember --remember-session --asterisks"
+user = "greeter"
+EOF
+    dmenable greetd
+  ;;
+  "lightdm-gtk-greeter")
+    instpkg lightdm-gtk-greeter
+    dmenable lightdm
+  ;;
+  "lxdm")
+    instpkg lxdm
+    dmenable lxdm
+  ;;
+esac
+
+exit 0

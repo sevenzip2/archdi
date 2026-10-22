@@ -1,0 +1,39 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("flatpak" "Sandboxed applications" on)
+options+=("flathub" "Add the Flathub repository" on)
+options+=("discover" "KDE app store (flatpak backend)" off)
+options+=("gnome-software" "GNOME app store (flatpak backend)" off)
+
+sel=$(dialog --backtitle "$apptitle" --title "Flatpak :" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  case $itm in
+    "flathub") ;;
+    *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
+  esac
+done
+
+instpkg "$pkg" "$aurpkg"
+
+for itm in $sel; do
+  case $itm in
+    "flathub")
+      if [ -f /usr/bin/flatpak ]; then
+        clear
+        echo "flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo"
+        flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+        pressanykey
+      fi
+    ;;
+  esac
+done
+
+exit 0

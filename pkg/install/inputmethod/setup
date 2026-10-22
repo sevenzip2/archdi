@@ -1,0 +1,274 @@
+#!/bin/bash
+. ./lib
+
+envfile=/etc/environment
+xdgdir=/etc/xdg
+autostart=$xdgdir/autostart/archdi-inputmethod.desktop
+blockbegin="# archdi input method begin"
+blockend="# archdi input method end"
+
+options=()
+options+=("fcitx5" "Fcitx 5 + fcitx5-hangul (recommended)")
+options+=("ibus" "IBus + ibus-hangul (GNOME default)")
+options+=("kime" "(AUR) Korean IME written in Rust")
+options+=("nimf" "(AUR) Nimf input method framework")
+options+=("uim" "(AUR) uim with byeoru, orphaned package")
+options+=("" "")
+options+=("none" "Remove the input method settings made by archdi")
+
+im=$(dialog --backtitle "$apptitle" --title "Korean Input Method :" --cancel-button "Back" --menu "Choose your input method :" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]||[ "$im" = "" ]; then
+  exit 1
+fi
+
+# Environment variables and autostart from a previous run
+cleanim(){
+  sed -i "/^$blockbegin\$/,/^$blockend\$/d" $envfile
+  rm -f $autostart
+}
+
+if [ "$im" = "none" ]; then
+  if (confirm "Remove the input method variables from $envfile\nand $autostart ?") then
+    clear
+    cleanim
+    echo "Input method settings removed, log out to apply."
+    pressanykey
+  fi
+  exit 0
+fi
+
+options=()
+options+=("plasma-wayland" "KDE Plasma (Wayland)")
+options+=("gnome-wayland" "GNOME (Wayland)")
+options+=("wlroots" "Hyprland, Sway, niri (Wayland)")
+options+=("x11" "Xorg sessions and other desktops")
+session=$(dialog --backtitle "$apptitle" --title "Desktop session :" --cancel-button "Back" --menu "Where will you use $im ?" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+pkg=""
+aurpkg=""
+module=$im
+daemon=""
+help=""
+case $im in
+  fcitx5)
+    pkg="fcitx5 fcitx5-hangul fcitx5-gtk fcitx5-qt fcitx5-configtool"
+    module=fcitx
+    daemon="fcitx5 -d"
+    help="Configure with fcitx5-configtool."
+  ;;
+  ibus)
+    pkg="ibus ibus-hangul"
+    daemon="ibus-daemon -rxRd"
+    help="Run ibus-setup and add Korean - Hangul in Input Method."
+  ;;
+  kime)
+    aurpkg="kime-bin"
+    daemon="kime"
+    help="Configure with ~/.config/kime/config.yaml (see https://github.com/Riey/kime)."
+  ;;
+  nimf)
+    aurpkg="nimf"
+    daemon="nimf"
+    help="Configure with nimf-settings."
+  ;;
+  uim)
+    aurpkg="uim"
+    daemon="uim-xim"
+    help="Run uim-pref-gtk or uim-pref-qt5 and select byeoru as default input method."
+  ;;
+esac
+
+if [ ! "$aurpkg" = "" ]&&[ "$(getaurhelper)" = "" ]; then
+  dialog --backtitle "$apptitle" --title "Korean Input Method :" --msgbox "$im is in the AUR.\n\nInstall an AUR helper (paru, yay or trizen) in the Updates menu first." 0 0
+  exit 1
+fi
+
+# fcitx5 starts with an english layout only, set a system wide default with hangul
+fcitxkey=""
+if [ "$im" = "fcitx5" ]; then
+  options=()
+  options+=("Hangul" "Hangul key (korean keyboard)")
+  options+=("Alt_R" "Right Alt")
+  options+=("Shift+space" "Shift + Space")
+  options+=("Control+space" "Ctrl + Space")
+  fcitxkey=$(dialog --backtitle "$apptitle" --title "Fcitx 5 :" --cancel-button "Back" --menu "Key to switch between english and hangul :" 0 0 0 \
+    "${options[@]}" \
+    3>&1 1>&2 2>&3)
+  if [ ! "$?" = "0" ]; then
+    exit 1
+  fi
+fi
+
+if [ ! "$(pacman -Qq noto-fonts-cjk 2>/dev/null)" ]; then
+  if (confirm "Korean characters need a CJK font.\n\nInstall noto-fonts-cjk ?") then
+    pkg="$pkg noto-fonts-cjk"
+  fi
+fi
+
+instpkg "$pkg" "$aurpkg"
+
+clear
+cleanim
+
+# On Wayland, GTK3/4 and Qt6 talk to fcitx5/ibus through the text-input protocol and need no
+# variable, XMODIFIERS is still used by Xwayland (XIM) apps and QT_IM_MODULE by Qt5 apps.
+# kime, nimf and uim rely on their GTK/Qt modules in every session.
+envvars=()
+if [ "$im" = "fcitx5" ]||[ "$im" = "ibus" ]; then
+  case $session in
+    plasma-wayland)
+      envvars+=("XMODIFIERS=@im=$module")
+      envvars+=("QT_IM_MODULES=\"wayland;$module\"")
+    ;;
+    gnome-wayland)
+      # GNOME integrates ibus itself, other input methods need the GTK/Qt modules
+      if [ "$im" = "fcitx5" ]; then
+        envvars+=("GTK_IM_MODULE=$module")
+        envvars+=("QT_IM_MODULE=$module")
+        envvars+=("XMODIFIERS=@im=$module")
+      fi
+    ;;
+    wlroots)
+      envvars+=("XMODIFIERS=@im=$module")
+      envvars+=("QT_IM_MODULE=$module")
+      envvars+=("QT_IM_MODULES=\"wayland;$module\"")
+    ;;
+    x11)
+      envvars+=("GTK_IM_MODULE=$module")
+      envvars+=("QT_IM_MODULE=$module")
+      envvars+=("XMODIFIERS=@im=$module")
+      envvars+=("SDL_IM_MODULE=$module")
+    ;;
+  esac
+else
+  envvars+=("GTK_IM_MODULE=$module")
+  envvars+=("QT_IM_MODULE=$module")
+  envvars+=("XMODIFIERS=@im=$module")
+fi
+echo "$envfile :"
+if [ "${#envvars[@]}" = "0" ]; then
+  echo "  no variable needed"
+else
+  echo "$blockbegin" >> $envfile
+  for var in "${envvars[@]}"; do
+    echo "  $var"
+    echo "$var" >> $envfile
+  done
+  echo "$blockend" >> $envfile
+fi
+
+# Plasma (Virtual Keyboard setting) and GNOME (ibus) start the input method themselves,
+# otherwise start the daemon at login when the package does not ship an autostart file
+needautostart=1
+if [ "$session" = "plasma-wayland" ]&&{ [ "$im" = "fcitx5" ]||[ "$im" = "ibus" ]; }; then
+  needautostart=0
+fi
+if [ "$session" = "gnome-wayland" ]&&[ "$im" = "ibus" ]; then
+  needautostart=0
+fi
+if [ "$needautostart" = "1" ]; then
+  daemonbin=${daemon%% *}
+  if ! grep -qs "^Exec=\(/usr/bin/\)\?$daemonbin\b" $xdgdir/autostart/*.desktop; then
+    echo ""
+    echo "$autostart :"
+    echo "  Exec=$daemon"
+    mkdir -p $xdgdir/autostart
+    {
+      echo "[Desktop Entry]"
+      echo "Type=Application"
+      echo "Name=Input Method ($im)"
+      echo "Exec=$daemon"
+      echo "NoDisplay=true"
+      if [ "$im" = "ibus" ]; then
+        # GNOME starts ibus itself
+        echo "NotShowIn=GNOME;"
+      fi
+    } > $autostart
+  fi
+fi
+
+if [ "$im" = "fcitx5" ]; then
+  echo ""
+  echo "$xdgdir/fcitx5/profile, $xdgdir/fcitx5/config :"
+  echo "  keyboard-us + hangul, switch with $fcitxkey"
+  mkdir -p $xdgdir/fcitx5
+  for file in profile config; do
+    if [ -f $xdgdir/fcitx5/$file ]&&[ ! -f $xdgdir/fcitx5/$file.archdi.bak ]; then
+      cp $xdgdir/fcitx5/$file $xdgdir/fcitx5/$file.archdi.bak
+    fi
+  done
+  cat << EOF > $xdgdir/fcitx5/profile
+[Groups/0]
+Name=Default
+Default Layout=us
+DefaultIM=hangul
+
+[Groups/0/Items/0]
+Name=keyboard-us
+Layout=
+
+[Groups/0/Items/1]
+Name=hangul
+Layout=
+
+[GroupOrder]
+0=Default
+EOF
+  cat << EOF > $xdgdir/fcitx5/config
+[Hotkey]
+EnumerateWithTriggerKeys=True
+
+[Hotkey/TriggerKeys]
+0=$fcitxkey
+EOF
+  if [ ! "$fcitxkey" = "Control+space" ]; then
+    echo "1=Control+space" >> $xdgdir/fcitx5/config
+  fi
+fi
+
+# Other input methods still installed would also start at login (fcitx5 ships its own autostart)
+for other in fcitx5 ibus kime-bin nimf uim; do
+  if [ ! "$other" = "$im" ]&&[ ! "$other" = "$aurpkg" ]&&[ "$(pacman -Qq $other 2>/dev/null)" ]; then
+    echo ""
+    echo "$other is still installed, remove it if you don't use it : pacman -Rns $other"
+  fi
+done
+
+echo ""
+echo "$im is configured, log out and log in again to use it."
+case $session in
+  plasma-wayland)
+    case $im in
+      fcitx5) echo "Plasma : System Settings > Keyboard > Virtual Keyboard, select Fcitx 5.";;
+      ibus) echo "Plasma : System Settings > Keyboard > Virtual Keyboard, select IBus Wayland.";;
+    esac
+  ;;
+  gnome-wayland)
+    case $im in
+      ibus) echo "GNOME : Settings > Keyboard > Input Sources, add Korean (Hangul).";;
+      fcitx5) echo "GNOME : install the \"Input Method Panel\" (kimpanel) shell extension to see the candidate window.";;
+    esac
+  ;;
+  wlroots)
+    # Compositors do not run xdg autostart files unless started with uwsm or dex
+    niriargs=$(for word in $daemon; do printf ' "%s"' "$word"; done)
+    echo "Start $im from your compositor config if it does not run xdg autostart files :"
+    echo "  Hyprland : exec-once = $daemon"
+    echo "  Sway     : exec $daemon"
+    echo "  niri     : spawn-at-startup$niriargs"
+  ;;
+esac
+if [ ! "$session" = "x11" ]; then
+  echo "Electron apps (VS Code, Discord...) on Wayland need --enable-wayland-ime."
+fi
+echo "$help"
+pressanykey
+
+exit 0

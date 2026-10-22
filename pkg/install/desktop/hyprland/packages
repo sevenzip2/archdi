@@ -1,0 +1,46 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("hyprland" "Compositor" on)
+options+=("xdg-desktop-portal-hyprland" "Screen sharing portal" on)
+options+=("hyprpolkitagent" "Polkit agent" on)
+options+=("uwsm" "Session manager (runs xdg autostart)" on)
+options+=("kitty" "Default terminal" on)
+options+=("waybar" "Status bar" on)
+options+=("fuzzel" "App launcher" on)
+options+=("mako" "Notifications" on)
+options+=("hyprpaper" "Wallpaper" on)
+options+=("hyprlock" "Screen locker" on)
+options+=("hypridle" "Idle daemon" on)
+options+=("cliphist" "Clipboard history" off)
+options+=("grim" "Screenshot" on)
+options+=("slurp" "Region selection for grim" on)
+options+=("wl-clipboard" "Clipboard tools" on)
+options+=("brightnessctl" "Backlight control" on)
+options+=("network-manager-applet" "Network tray applet" on)
+options+=("pavucontrol" "Volume control" on)
+options+=("xdg-desktop-portal-gtk" "File chooser portal" on)
+options+=("nwg-look" "GTK theme settings" off)
+options+=("qt6ct" "Qt6 theme settings" off)
+
+sel=$(dialog --backtitle "$apptitle" --title "Hyprland Install :" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  pkg="$pkg $(echo $itm | sed 's/"//g')"
+done
+
+instpkg "$pkg" "$aurpkg"
+
+clear
+echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"
+echo "  uwsm start hyprland.desktop"
+echo "A default config is created in ~/.config/hypr/hyprland.conf at first start."
+pressanykey
+
+exit 0

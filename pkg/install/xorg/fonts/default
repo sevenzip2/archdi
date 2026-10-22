@@ -1,0 +1,30 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("noto-fonts" "Noto, wide unicode coverage" on)
+options+=("noto-fonts-cjk" "Chinese, Japanese, Korean" on)
+options+=("noto-fonts-emoji" "Color emoji" on)
+options+=("gsfonts" "" on)
+options+=("ttf-bitstream-vera" "" on)
+options+=("ttf-dejavu" "" on)
+options+=("ttf-liberation" "" on)
+options+=("xorg-fonts-type1" "" on)
+
+sel=$(dialog --backtitle "$apptitle" --title "Default Fonts :" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  case $itm in
+    *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
+  esac
+done
+
+instpkg "$pkg" "$aurpkg"
+
+exit 0

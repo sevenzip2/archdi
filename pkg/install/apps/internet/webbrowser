@@ -1,0 +1,41 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("chromium" "(GTK)" off)
+options+=("firefox" "(GTK)" off)
+options+=("firefox-i18n" "" off)
+options+=("opera" "(AUR) (GTK)" off)
+options+=("seamonkey" "(AUR) (GTK)" off)
+options+=("seamonkey-i18n" "(AUR)" off)
+options+=("falkon" "(QT)" off)
+options+=("vivaldi" "(GTK)" off)
+options+=("vivaldi-ffmpeg-codecs" "Non-free codecs" off)
+
+sel=$(dialog --backtitle "$apptitle" --title "Web Browser applications :" --cancel-button "Back" --checklist "Choose what you want" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  case $itm in
+    "firefox-i18n" | \
+    "seamonkey-i18n") pkg="$pkg";;
+    "opera" | \
+    "seamonkey") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
+  esac
+done
+
+instpkg "$pkg" "$aurpkg"
+
+for itm in $sel; do
+  case $itm in
+    "firefox-i18n") choosepkg "firefox-i18n-";;
+    "seamonkey-i18n") chooseaurpkg "seamonkey-i18n-";;
+  esac
+done
+
+exit 0

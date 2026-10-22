@@ -1,0 +1,19 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("pipewire" "PipeWire + WirePlumber (recommended)")
+options+=("pulseaudio" "(legacy)")
+
+defaultitem=""
+sel=$(dialog --backtitle "$apptitle" --title "System Sound Menu :" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
+
+script install/system/sound/$sel
+
+exit 0

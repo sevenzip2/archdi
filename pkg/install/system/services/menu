@@ -1,0 +1,128 @@
+#!/bin/bash
+. ./lib
+
+options=()
+options+=("networkmanager" "Network Management" on)
+options+=("openssh" "Server SSH" on)
+options+=("cronie" "Cron tasks server" off)
+options+=("xdg-user-dirs" "Create user directories" on)
+options+=("numlockon" "numlock on on tty" on)
+options+=("systemd-timesyncd" "Time synchronization (NTP client)" on)
+# fstrim is useful when the system has SSD/NVMe drives
+if [ "$(lsblk -dno ROTA 2>/dev/null | grep -c 0)" != "0" ]; then
+  options+=("fstrim" "Weekly SSD trim (fstrim.timer)" on)
+else
+  options+=("fstrim" "Weekly SSD trim (fstrim.timer)" off)
+fi
+options+=("pacman-contrib" "Weekly package cache cleanup (paccache.timer)" on)
+options+=("reflector" "Weekly mirrorlist refresh (reflector.timer)" off)
+# Laptops : power profiles (balanced, power-saver, performance)
+if ls /sys/class/power_supply/BAT* &>/dev/null; then
+  options+=("power-profiles-daemon" "Power profiles (laptop)" on)
+else
+  options+=("power-profiles-daemon" "Power profiles (laptop)" off)
+fi
+options+=("fwupd" "Firmware updates (fwupdmgr)" off)
+if grep -q GenuineIntel /proc/cpuinfo; then
+  options+=("intel-ucode" "Intel microcode" on)
+else
+  options+=("intel-ucode" "Intel microcode" off)
+fi
+if grep -q AuthenticAMD /proc/cpuinfo; then
+  options+=("amd-ucode" "AMD microcode" on)
+else
+  options+=("amd-ucode" "AMD microcode" off)
+fi
+if ls /sys/class/bluetooth/hci* &>/dev/null; then
+  options+=("bluez" "Bluetooth" on)
+  options+=("bluez-utils" "bluetoothctl" on)
+else
+  options+=("bluez" "Bluetooth" off)
+  options+=("bluez-utils" "bluetoothctl" off)
+fi
+options+=("net-snmp" "SNMP Server" off)
+options+=("samba" "Server SMB" off)
+options+=("pkgstats" "" off)
+
+sel=$(dialog --backtitle "$apptitle" --title "Services Install" --cancel-button "Back" --checklist "" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  case $itm in
+    "numlockon" | \
+    "systemd-timesyncd" | \
+    "fstrim") ;;
+    *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
+  esac
+done
+
+
+instpkg "$pkg" "$aurpkg"
+
+for itm in $sel; do
+  case $itm in
+    "networkmanager")
+      systemctl disable dhcpcd
+      if (svcenable NetworkManager) then
+        svcdisable dhcpcd
+      fi
+    ;;
+    "openssh")
+      svcenable sshd "SSH Server"
+    ;;
+    "cronie")
+      svcenable cronie
+    ;;
+    "bluez")
+      svcenable bluetooth "Bluetooth Service"
+    ;;
+    "systemd-timesyncd")
+      clear
+      echo "timedatectl set-ntp true"
+      timedatectl set-ntp true
+      pressanykey
+    ;;
+    "fstrim")
+      svcenable fstrim.timer "Weekly SSD trim"
+    ;;
+    "pacman-contrib")
+      svcenable paccache.timer "Weekly package cache cleanup"
+    ;;
+    "reflector")
+      svcenable reflector.timer "Weekly mirrorlist refresh (/etc/xdg/reflector/reflector.conf)"
+    ;;
+    "power-profiles-daemon")
+      svcenable power-profiles-daemon "Power profiles"
+    ;;
+    "numlockon") script install/system/services/numlockon;;
+    "net-snmp")
+      if (confirm "Create and edit /etc/snmp/snmpd.conf ?") then
+        mkdir /etc/snmp > /dev/null
+        echo "# SNMP Server Config" > /etc/snmp/snmpd.conf
+        echo "# ------------------" >> /etc/snmp/snmpd.conf
+        echo "" >> /etc/snmp/snmpd.conf
+        echo "# SNMP 1 and 2" >> /etc/snmp/snmpd.conf
+        echo "#rocommunity read_only_user" >> /etc/snmp/snmpd.conf
+        echo "#rwcommunity read_write_user" >> /etc/snmp/snmpd.conf
+        echo "" >> /etc/snmp/snmpd.conf
+        echo "# SNMP 3" >> /etc/snmp/snmpd.conf
+        echo "#rouser read_only_user" >> /etc/snmp/snmpd.conf
+        editfile /etc/snmp/snmpd.conf
+      fi
+      if (confirm "Create and edit /var/net-snmp/snmpd.conf (for SNMPv3) ?") then
+        mkdir -p /var/net-snmp/ > /dev/null
+        echo "# Note : Clear text password will be encrypted when you restart snmpd." > /var/net-snmp/snmpd.conf
+        echo "" >> /var/net-snmp/snmpd.conf
+        echo "#createUser read_only_user SHA password1 AES password2" >> /var/net-snmp/snmpd.conf
+        editfile /var/net-snmp/snmpd.conf
+      fi
+      svcenable snmpd "SNMP Server"
+    ;;
+  esac
+done
+
+exit 0

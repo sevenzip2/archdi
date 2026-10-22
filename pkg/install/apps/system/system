@@ -1,0 +1,56 @@
+#!/bin/bash
+. ./lib
+options=()
+options+=("gparted" "(GTK) Partitions manager" off)
+options+=("bleachbit" "(GTK) profile cleaner" off)
+options+=("keepassxc" "(QT) Password Manager" off)
+options+=("keepass" "(MONO) Password Manager" off)
+#options+=("keepassx2" "(QT) Password Manager" off)
+#options+=("keepassx" "(QT) Password Manager" off)
+options+=("virtualbox" "(QT) Virtualization software" off)
+options+=("virtualbox-ext-oracle" "(AUR) Ext Pack" off)
+options+=("wine" "MS Windows App Support" off)
+options+=("wine-gecko" "MS Windows App Support" off)
+options+=("wine-mono" "MS Windows App Support" off)
+options+=("zenity" "recommended for wine" off)
+options+=("winetricks" "recommended for wine" off)
+options+=("q4wine" "(AUR)" off)
+options+=("gdmap" "(AUR)" off)
+options+=("k4dirstat" "(AUR)" off)
+options+=("conky" "" off)
+
+sel=$(dialog --backtitle "$apptitle" --title "System applications :" --cancel-button "Back" --checklist "Choose what you want" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+for itm in $sel; do
+  case $itm in
+    '"keepassx-git"' | \
+    '"virtualbox-ext-oracle"' | \
+    '"k4dirstat"') aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    '"wine"' | \
+    '"wine_gecko"')
+      multilib="true"
+      pkg="$pkg $(echo $itm | sed 's/"//g')"
+    ;;
+    '"virtualbox"' )
+      pkg="$pkg $(echo $itm | sed 's/"//g')"
+    ;;
+    "q4wine" | \
+    "gdmap") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
+  esac
+done
+
+if [ "$multilib" = "true" ]; then
+  if ! enablemultilib; then
+    exit 1
+  fi
+fi
+
+instpkg "$pkg" "$aurpkg"
+
+exit 0
