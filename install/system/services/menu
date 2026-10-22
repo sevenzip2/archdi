@@ -8,19 +8,19 @@ options+=("cronie" "Cron tasks server" on)
 options+=("xdg-user-dirs" "Create user directories" on)
 options+=("numlockon" "numlock on on tty" on)
 options+=("haveged" "Antropy generator" on)
-if (lscpu | grep Intel) then
+if grep -q GenuineIntel /proc/cpuinfo; then
   options+=("intel-ucode" "Intel microcode" on)
 else
   options+=("intel-ucode" "Intel microcode" off)
 fi
-if (lscpu | grep AMD) then
+if grep -q AuthenticAMD /proc/cpuinfo; then
   options+=("amd-ucode" "AMD microcode" on)
 else
   options+=("amd-ucode" "AMD microcode" off)
 fi
 options+=("net-snmp" "SNMP Server" off)
 options+=("samba" "Server SMB" off)
-if (dmesg |grep Bluetooth) then
+if ls /sys/class/bluetooth/hci* &>/dev/null; then
   options+=("bluez" "" on)
   options+=("bluez-libs" "" on)
 else

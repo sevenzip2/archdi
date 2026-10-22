@@ -35,7 +35,7 @@ export DIALOGRC="dialog.archfi"
 
 # $1: path
 menu(){
-  require $1 755
+  require $1 755 || return 1
   $cachedir/$1
   if [ $? = 0 ]; then
     menu $1
@@ -45,7 +45,7 @@ menu(){
 
 # $1: path
 script(){
-  require $1 755
+  require $1 755 || return 1
   $cachedir/$1
 }
 
@@ -146,10 +146,15 @@ chooseaurpkg(){
 # $2: chmod
 require(){
   if [ ! -f "$cachedir/$1" ]; then
-    path=$(dirname $1)
-    mkdir -p $cachedir/$path 2> /dev/null
-    cd $cachedir/$path
-    curl -LO $baseurl/$1 2> /dev/null
+    mkdir -p $cachedir/$(dirname $1) 2> /dev/null
+    # -f: never save (and later run) an HTTP error page as a script
+    if ! curl -fsSL "$baseurl/$1" -o "$cachedir/$1"; then
+      rm -f "$cachedir/$1"
+      echo "Unable to download $baseurl/$1"
+      pressanykey
+      cd $cachedir
+      return 1
+    fi
   fi
   chmod $2 $cachedir/$1
   cd $cachedir
@@ -179,6 +184,41 @@ editfile(){
   fi
   echo "$editor $1"
   $editor "$1"
+}
+
+
+# $1 : user name
+validusername(){
+  [[ "$1" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]]
+}
+
+
+# $1 : file name in /etc/sudoers.d
+# $2 : content
+# Validate with visudo before installing, a broken sudoers file locks sudo
+writesudoers(){
+  tmpfile=$(mktemp)
+  echo -e "$2" > $tmpfile
+  if visudo -cqf $tmpfile; then
+    install -m 0440 -o root -g root $tmpfile /etc/sudoers.d/$1
+    rm -f $tmpfile
+    return 0
+  fi
+  echo "Invalid sudoers content, /etc/sudoers.d/$1 not changed"
+  rm -f $tmpfile
+  pressanykey
+  return 1
+}
+
+
+# $1 : sudoers file, edited with visudo (syntax check before save)
+editsudoers(){
+  editor=$EDITOR
+  if [ "$editor" == "" ]||[ ! -f "/usr/bin/$editor" ]; then
+    editor="nano"
+  fi
+  echo "visudo -f $1"
+  EDITOR=$editor visudo -f "$1"
 }
 
 

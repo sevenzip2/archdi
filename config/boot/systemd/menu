@@ -7,10 +7,14 @@ options+=("Entries" "/boot/loader/entries")
 options+=("" "")
 options+=("Update" "bootctl update")
 options+=("" "")
-if [ ! -f /etc/pacman.d/hooks/systemd-boot.hook ];  then
-  options+=("Create pacman hook" "/etc/pacman.d/hooks/systemd-boot.hook")
+# systemd-boot-update.service updates the boot loader after systemd upgrades (replaces the old pacman hook)
+if systemctl is-enabled -q systemd-boot-update.service 2>/dev/null; then
+  options+=("Disable auto update" "systemd-boot-update.service")
 else
-  options+=("Delete pacman hook" "/etc/pacman.d/hooks/systemd-boot.hook")
+  options+=("Enable auto update" "systemd-boot-update.service")
+fi
+if [ -f /etc/pacman.d/hooks/systemd-boot.hook ]; then
+  options+=("Delete old pacman hook" "/etc/pacman.d/hooks/systemd-boot.hook")
 fi
 
 defaultitem="Config"
@@ -37,22 +41,16 @@ case $sel in
     bootctl update
     pressanykey
   ;;
-  'Create pacman hook')
-    mkdir -p /etc/pacman.d/hooks
-    cat <<EOF > /etc/pacman.d/hooks/systemd-boot.hook
-[Trigger]
-Type = Package
-Operation = Upgrade
-Target = systemd
-
-[Action]
-Description = Updating systemd-boot
-When = PostTransaction
-Exec = /usr/bin/bootctl update    
-EOF
+  'Enable auto update')
+    svcenable systemd-boot-update.service "systemd-boot auto update"
   ;;
-  'Delete pacman hook')
-    rm /etc/pacman.d/hooks/systemd-boot.hook
+  'Disable auto update')
+    svcdisable systemd-boot-update.service "systemd-boot auto update"
+  ;;
+  'Delete old pacman hook')
+    if (confirm "Delete /etc/pacman.d/hooks/systemd-boot.hook ?\n\nUse systemd-boot-update.service instead.") then
+      rm /etc/pacman.d/hooks/systemd-boot.hook
+    fi
   ;;
 esac
 

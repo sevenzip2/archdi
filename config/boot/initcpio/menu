@@ -3,7 +3,7 @@
 
 options=()
 options+=("Config" "/etc/mkinitcpio.conf")
-options+=("mkinicpio" "")
+options+=("mkinitcpio" "")
 
 defaultitem="Config"
 sel=$(dialog --backtitle "$apptitle" --title "Initcpio Config Menu :" --default-item "$defaultitem" --cancel-button "Back" --menu "" 0 0 0 \
@@ -16,7 +16,7 @@ sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 
 case $sel in
   'Config') editfile /etc/mkinitcpio.conf;;
-  'mkinicpio')
+  'mkinitcpio')
     options=()
     configs=$(ls /etc/mkinitcpio.d)
     for itm in $configs; do

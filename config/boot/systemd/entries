@@ -35,9 +35,24 @@ case $sel in
     'Create entry')
       entry=$(dialog --backtitle "$apptitle" --title "Create entry" --inputbox "Enter the new entry name :" 0 0 3>&1 1>&2 2>&3)
       if [ "$?" = "0" ]; then
-        cp /usr/share/systemd/bootctl/arch.conf /boot/loader/entries/$entry.conf
-        sed -i "s/Arch Linux/$entry/" /boot/loader/entries/$entry.conf
-        editfile /boot/loader/entries/$entry.conf
+        if [[ ! "$entry" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          dialog --backtitle "$apptitle" --title "Create entry" --msgbox "Invalid entry name : $entry" 0 0
+          exit 0
+        fi
+        kernellist=()
+        for itm in /boot/vmlinuz-*; do
+          [ -f "$itm" ] && kernellist+=("${itm#/boot/vmlinuz-}" "")
+        done
+        kernel=$(dialog --backtitle "$apptitle" --title "Create entry : kernel" --cancel-button "Cancel" --menu "" 0 0 0 \
+        "${kernellist[@]}" \
+        3>&1 1>&2 2>&3)
+        if [ "$?" = "0" ]; then
+          # Start from the running kernel command line, without the loader specific parts
+          cmdline=$(sed -E 's/(^| )(BOOT_IMAGE|initrd)=[^ ]*//g; s/^ +//' /proc/cmdline)
+          printf "title   %s\nlinux   /vmlinuz-%s\ninitrd  /initramfs-%s.img\noptions %s\n" \
+            "$entry" "$kernel" "$kernel" "$cmdline" > /boot/loader/entries/$entry.conf
+          editfile /boot/loader/entries/$entry.conf
+        fi
       fi
     ;;
     'Delete entry')
@@ -67,6 +82,20 @@ case $sel in
       if [ "$?" = "0" ]; then
         endmsg="Nothing to do !"
         clear
+        # With the mkinitcpio microcode hook, microcode is already embedded in the initramfs
+        hooks=$(cat /etc/mkinitcpio.conf /etc/mkinitcpio.conf.d/*.conf 2>/dev/null | grep '^HOOKS=' | tail -n1)
+        if [[ "$hooks" =~ [\(\ ]microcode[\)\ ] ]]; then
+          for itm in $sel; do
+            itm=${itm//\"/}
+            if grep -qE '(amd|intel)-ucode.img' /boot/loader/entries/$itm.conf; then
+              endmsg="Microcode is embedded by the mkinitcpio microcode hook."
+              echo "Remove separate ucode initrd from $itm"
+              sed -i -E "/(amd|intel)-ucode.img/d" /boot/loader/entries/$itm.conf
+            fi
+          done
+          sel=""
+          [ "$endmsg" = "Nothing to do !" ] && endmsg="Microcode is embedded by the mkinitcpio microcode hook, nothing to do !"
+        fi
         for itm in $sel; do
           itm=${itm//\"/}
           if [ -f /boot/amd-ucode.img ]; then

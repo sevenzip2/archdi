@@ -85,9 +85,10 @@ checkaurdependencies(){
     chmod 777 /tmp/aurbuilder
     usermod -d /tmp/aurbuilder aurbuilder
   fi
-  if [ ! -f /etc/sudoers.d/aurbuilder ]; then
-    echo "aurbuilder ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/aurbuilder
-    echo "root ALL=(aurbuilder) NOPASSWD: ALL" >> /etc/sudoers.d/aurbuilder
+  # aurbuilder only needs pacman (makepkg -si, AUR helpers), not a full root shell
+  aurbuildersudoers="aurbuilder ALL=(ALL) NOPASSWD: /usr/bin/pacman\nroot ALL=(aurbuilder) NOPASSWD: ALL"
+  if [ ! "$(cat /etc/sudoers.d/aurbuilder 2>/dev/null)" = "$(echo -e "$aurbuildersudoers")" ]; then
+    writesudoers aurbuilder "$aurbuildersudoers"
   fi
 }
 
