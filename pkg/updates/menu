@@ -134,15 +134,15 @@ case $sel in
     instpkg "" "downgrade" || exit 1
   ;;
   'Install paru')
-    if(confirm "Paru allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall paru ?\n\n(built from source : paru-bin breaks when pacman is updated)") then
+    if(confirm "Paru allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall paru (paru-git) ?") then
       clear
-      aurrun sh -c "rm -rf paru && git clone https://aur.archlinux.org/paru.git && cd paru && makepkg -si"
+      aurrun sh -c "rm -rf paru-git && git clone https://aur.archlinux.org/paru-git.git && cd paru-git && makepkg -si"
     fi
   ;;
   'Install yay')
-    if(confirm "Yay allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall yay ?") then
+    if(confirm "Yay allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall yay (yay-git) ?") then
       clear
-      aurrun sh -c "rm -rf yay && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si"
+      aurrun sh -c "rm -rf yay-git && git clone https://aur.archlinux.org/yay-git.git && cd yay-git && makepkg -si"
     fi
   ;;
   'Install pkgstats')

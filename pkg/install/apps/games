@@ -10,7 +10,7 @@ options+=("lib32-mangohud" "(multilib) 32-bit mangohud" off)
 options+=("gamescope" "Gaming micro-compositor" off)
 options+=("lutris" "Game manager (Wine, emulators)" off)
 options+=("prismlauncher" "Minecraft launcher" off)
-options+=("heroic-games-launcher-bin" "(AUR) Epic, GOG, Amazon games" off)
+options+=("heroic-games-launcher-git" "(AUR) Epic, GOG, Amazon games" off)
 options+=("protonup-qt" "(AUR) Proton-GE / Wine-GE manager" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Games :" --cancel-button "Back" --checklist "" 0 0 0 \
@@ -29,7 +29,7 @@ for itm in $sel; do
       multilib="true"
       pkg="$pkg $(echo $itm | sed 's/"//g')"
     ;;
-    "heroic-games-launcher-bin" | \
+    "heroic-games-launcher-git" | \
     "protonup-qt") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac

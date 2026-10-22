@@ -69,7 +69,7 @@ case $im in
     help="Run ibus-setup and add Korean - Hangul in Input Method."
   ;;
   kime)
-    aurpkg="kime-bin"
+    aurpkg="kime-git"
     daemon="kime"
     help="Configure with ~/.config/kime/config.yaml (see https://github.com/Riey/kime)."
   ;;
@@ -248,7 +248,7 @@ EOF
 fi
 
 # Other input methods still installed would also start at login (fcitx5 ships its own autostart)
-for other in fcitx5 ibus kime-bin nimf uim; do
+for other in fcitx5 ibus kime kime-bin kime-git nimf uim; do
   if [ ! "$other" = "$im" ]&&[ ! "$other" = "$aurpkg" ]&&[ "$(pacman -Qq $other 2>/dev/null)" ]; then
     echo ""
     echo "$other is still installed, remove it if you don't use it : pacman -Rns $other"
