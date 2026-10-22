@@ -3,11 +3,12 @@
 
 # Arch Linux Desktop Install (archdi)
 # -----------------------------------
-# author    : MatMoul
+# author    : MatMoul (original author)
 #             https://github.com/MatMoul
-#             http://sourceforge.net/u/matmoul
-# project   : https://github.com/MatMoul/archdi
-#             http://sourceforge.net/projects/archdi/
+# maintainer: sevenzip2 (fork)
+#             https://github.com/sevenzip2
+# project   : https://github.com/sevenzip2/archdi
+# upstream  : https://github.com/MatMoul/archdi
 # license   : GPLv3 (http://opensource.org/licenses/GPL-3.0)
 
 
@@ -16,21 +17,19 @@ apptitle="Arch Linux Desktop Install (archdi) - Version: 2022.11.11.02.04.49 (GP
 version="2022.11.11.02.04.49"
 cachedir=~/.cache/archdi
 
-lastverurl1=http://archdi.sourceforge.net/version
-lastverurl2=https://raw.githubusercontent.com/MatMoul/archdi/master/version
-lastverurl3=https://cdn.jsdelivr.net/gh/MatMoul/archdi@master/version
+githubuser=sevenzip2
 
-binurl1=archdi.sourceforge.net/archdi
-binurl2=matmoul.github.io/archdi
-binurl3=https://cdn.jsdelivr.net/gh/MatMoul/archdi@master/archdi
+lastverurl1=https://raw.githubusercontent.com/$githubuser/archdi/master/version
+lastverurl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi@master/version
 
-liburl1=http://archdi.sourceforge.net/archdi-lib
-liburl2=https://raw.githubusercontent.com/MatMoul/archdi-pkg/master/lib
-liburl3=https://cdn.jsdelivr.net/gh/MatMoul/archdi-pkg@master/lib
+binurl1=https://raw.githubusercontent.com/$githubuser/archdi/master/archdi
+binurl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi@master/archdi
 
-pkgurl1=http://archdi.sourceforge.net/archdi-pkg
-pkgurl2=https://raw.githubusercontent.com/MatMoul/archdi-pkg/master/pkg.tar
-pkgurl3=https://cdn.jsdelivr.net/gh/MatMoul/archdi-pkg@master/pkg.tar
+liburl1=https://raw.githubusercontent.com/$githubuser/archdi-pkg/master/lib
+liburl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi-pkg@master/lib
+
+pkgurl1=https://raw.githubusercontent.com/$githubuser/archdi-pkg/master/pkg.tar
+pkgurl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi-pkg@master/pkg.tar
 
 
 help(){
@@ -116,28 +115,21 @@ dependencies(){
   clear
   echo "Checking internet and server connexion ..."
   lastverurl=$lastverurl1
-  lastver=$(curl $lastverurl)
+  lastver=$(curl -fsSL $lastverurl)
   if [ "$?" = "0" ] && [ "${#lastver}" = "19" ]; then
     binurl=$binurl1
     liburl=$liburl1
     pkgurl=$pkgurl1
   else
     lastverurl=$lastverurl2
-    lastver=$(curl $lastverurl)
+    lastver=$(curl -fsSL $lastverurl)
     if [ "$?" = "0" ] && [ "${#lastver}" = "19" ]; then
       binurl=$binurl2
       liburl=$liburl2
       pkgurl=$pkgurl2
     else
-      lastverurl=$lastverurl3
-      lastver=$(curl $lastverurl)
-      if [ "$?" = "0" ] && [ "${#lastver}" = "19" ]; then
-        binurl=$binurl3
-        liburl=$liburl3
-        pkgurl=$pkgurl3
-      else
-        exit 1
-      fi
+      echo "Unable to reach $lastverurl1 or $lastverurl2"
+      exit 1
     fi
   fi
   echo ""
@@ -186,17 +178,15 @@ while (( "$#" )); do
     --chroot) chrootoption="true";;
     -b | --branch)
       shift
-      liburl1=https://raw.githubusercontent.com/MatMoul/archdi-pkg/$1/lib
-      liburl2=https://raw.githubusercontent.com/MatMoul/archdi-pkg/$1/lib
+      liburl1=https://raw.githubusercontent.com/$githubuser/archdi-pkg/$1/lib
+      liburl2=https://cdn.jsdelivr.net/gh/$githubuser/archdi-pkg@$1/lib
       pkgurl1=""
       pkgurl2=""
       branchoption="$1"
-      githubuser="MatMoul"
     ;;
     -l | --local)
       shift
       apptitle="Arch Linux Desktop Install (archdi) - Version: local ($1)"
-version="2022.11.11.02.04.49"
       pkgdir="$1"
     ;;
     -t | --test)
