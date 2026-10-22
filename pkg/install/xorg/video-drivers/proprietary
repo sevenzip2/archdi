@@ -1,8 +1,20 @@
 #!/bin/bash
 . ./lib
 
+# Virtual machine (works in arch-chroot too) : oracle = VirtualBox, kvm / qemu, vmware
+virt=$(systemd-detect-virt --vm 2>/dev/null)
+vm(){
+  for name in "$@"; do
+    [ "$virt" = "$name" ] && echo on && return
+  done
+  echo off
+}
+
 options=()
-options+=("virtualbox-guest-utils" "(For Virtualbox)" off)
+options+=("virtualbox-guest-utils" "VirtualBox guest (resize, clipboard)" $(vm oracle))
+options+=("qemu-guest-agent" "QEMU / KVM guest agent" $(vm kvm qemu))
+options+=("spice-vdagent" "QEMU / KVM SPICE (resize, clipboard)" $(vm kvm qemu))
+options+=("open-vm-tools" "VMware guest tools" $(vm vmware))
 options+=("nvidia-open" "(Turing / GTX 16xx and newer, linux kernel)" off)
 options+=("nvidia-open-lts" "(Turing and newer, linux-lts kernel)" off)
 options+=("nvidia-open-dkms" "(Turing and newer, other kernels)" off)
@@ -13,7 +25,7 @@ options+=("nvidia-580xx-dkms" "(AUR) Maxwell / Pascal / Volta" off)
 options+=("nvidia-470xx-dkms" "(AUR) Kepler" off)
 options+=("nvidia-390xx-dkms" "(AUR) Fermi, end of life" off)
 
-sel=$(dialog --backtitle "$apptitle" --title "XOrg video drivers :" --cancel-button "Back" --checklist "Choose video drivers for your system :" 0 0 0 \
+sel=$(dialog --backtitle "$apptitle" --title "Proprietary drivers and VM guest tools :" --cancel-button "Back" --checklist "Detected virtual machine : ${virt:-none}" 0 0 0 \
   "${options[@]}" \
   3>&1 1>&2 2>&3)
 if [ ! "$?" = "0" ]; then
@@ -34,6 +46,12 @@ instpkg "$pkg" "$aurpkg"
 for itm in $sel; do
   case $itm in
     "virtualbox-guest-utils") svcenable vboxservice "VirtualBox guest services (clipboard, resize)";;
+    "qemu-guest-agent") svcenable qemu-guest-agent "QEMU guest agent";;
+    "spice-vdagent") svcenable spice-vdagentd "SPICE agent";;
+    "open-vm-tools")
+      svcenable vmtoolsd "VMware tools"
+      svcenable vmware-vmblock-fuse "VMware drag and drop"
+    ;;
   esac
 done
 

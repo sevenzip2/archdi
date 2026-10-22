@@ -3,7 +3,7 @@
 
 options=()
 options+=("Open Source" "Mesa, Vulkan, VA-API (AMD, Intel, nouveau)")
-options+=("Proprietary" "NVIDIA, VirtualBox")
+options+=("Proprietary" "NVIDIA, VM guest tools (VirtualBox, QEMU, VMware)")
 options+=("Legacy" "xf86-video Xorg drivers, rarely needed")
 
 defaultitem=""
