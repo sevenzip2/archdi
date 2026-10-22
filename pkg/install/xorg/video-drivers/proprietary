@@ -31,4 +31,10 @@ done
 
 instpkg "$pkg" "$aurpkg"
 
+for itm in $sel; do
+  case $itm in
+    "virtualbox-guest-utils") svcenable vboxservice "VirtualBox guest services (clipboard, resize)";;
+  esac
+done
+
 exit 0
