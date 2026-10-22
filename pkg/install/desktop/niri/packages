@@ -38,6 +38,10 @@ done
 instpkg "$pkg" "$aurpkg" || exit 1
 
 clear
+# The default config starts no polkit agent (password prompts of GUI apps), niri-session runs xdg autostart
+if [ -f /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ]; then
+  polkitautostart niri /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+fi
 echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"
 echo "  niri-session"
 echo "A default config is created in ~/.config/niri/config.kdl at first start."

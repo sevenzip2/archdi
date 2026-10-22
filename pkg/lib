@@ -13,7 +13,7 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.20.13 (GPLv3)"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.23.41 (GPLv3)"
 baseurl=https://raw.githubusercontent.com/sevenzip2/archdi/master/pkg
 cachedir=~/.cache/archdi
 
@@ -421,6 +421,25 @@ dkmsheaders(){
       fi
     fi
   done
+}
+
+# $1 : desktop name (XDG_CURRENT_DESKTOP)
+# $2 : polkit agent
+# Compositors without a polkit agent in their default config, started only in this desktop
+polkitautostart(){
+  file=/etc/xdg/autostart/archdi-polkit-$1.desktop
+  echo "$file :"
+  echo "  Exec=$2"
+  echo ""
+  mkdir -p /etc/xdg/autostart
+  cat << EOF > $file
+[Desktop Entry]
+Type=Application
+Name=Polkit authentication agent ($1)
+Exec=$2
+OnlyShowIn=$1;
+NoDisplay=true
+EOF
 }
 
 # $1 : kernel package just installed (linux, linux-lts...)
