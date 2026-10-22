@@ -94,7 +94,7 @@ fi
 fcitxkey=""
 if [ "$im" = "fcitx5" ]; then
   options=()
-  options+=("Hangul" "Hangul key (korean keyboard)")
+  options+=("Hangul" "Hangul key or Right Alt (korean keyboards, recommended)")
   options+=("Alt_R" "Right Alt")
   options+=("Shift+space" "Shift + Space")
   options+=("Control+space" "Ctrl + Space")
@@ -221,16 +221,23 @@ Layout=
 [GroupOrder]
 0=Default
 EOF
-  cat << EOF > $xdgdir/fcitx5/config
-[Hotkey]
-EnumerateWithTriggerKeys=True
-
-[Hotkey/TriggerKeys]
-0=$fcitxkey
-EOF
-  if [ ! "$fcitxkey" = "Control+space" ]; then
-    echo "1=Control+space" >> $xdgdir/fcitx5/config
-  fi
+  # Many keyboards (laptops, VMs) send Right Alt for the Hangul key, accept both
+  case $fcitxkey in
+    Hangul) triggerkeys="Hangul Alt_R Control+space";;
+    Control+space) triggerkeys="Control+space";;
+    *) triggerkeys="$fcitxkey Control+space";;
+  esac
+  {
+    echo "[Hotkey]"
+    echo "EnumerateWithTriggerKeys=True"
+    echo ""
+    echo "[Hotkey/TriggerKeys]"
+    i=0
+    for key in $triggerkeys; do
+      echo "$i=$key"
+      i=$((i+1))
+    done
+  } > $xdgdir/fcitx5/config
 fi
 
 # Other input methods still installed would also start at login (fcitx5 ships its own autostart)
@@ -269,6 +276,10 @@ if [ ! "$session" = "x11" ]; then
   echo "Electron apps (VS Code, Discord...) on Wayland need --enable-wayland-ime."
 fi
 echo "$help"
+if [ "$im" = "fcitx5" ]; then
+  echo "If the switch key does nothing : fcitx5-configtool > Global Options > Trigger Input Method, press the key."
+  echo "(Users who already have ~/.config/fcitx5/config keep their own keys.)"
+fi
 pressanykey
 
 exit 0
