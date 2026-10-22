@@ -242,10 +242,25 @@ validusername(){
 }
 
 
+# sudo (and visudo) is not part of the base install
+requiresudo(){
+  if [ ! -f /usr/bin/visudo ]; then
+    echo "sudo is not installed : pacman -S --needed --noconfirm sudo"
+    pacman -S --needed --noconfirm sudo
+  fi
+  if [ ! -f /usr/bin/visudo ]; then
+    echo "sudo could not be installed, sudoers not changed"
+    pressanykey
+    return 1
+  fi
+}
+
+
 # $1 : file name in /etc/sudoers.d
 # $2 : content
 # Validate with visudo before installing, a broken sudoers file locks sudo
 writesudoers(){
+  requiresudo || return 1
   tmpfile=$(mktemp)
   echo -e "$2" > $tmpfile
   if visudo -cqf $tmpfile; then
@@ -262,6 +277,7 @@ writesudoers(){
 
 # $1 : sudoers file, edited with visudo (syntax check before save)
 editsudoers(){
+  requiresudo || return 1
   editor=$EDITOR
   if [ "$editor" == "" ]||[ ! -f "/usr/bin/$editor" ]; then
     editor="nano"
