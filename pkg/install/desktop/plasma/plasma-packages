@@ -6,8 +6,13 @@ options=()
 package="plasma"
 items=$(pacman -Sqg $package)
 for item in $items; do
+  # Off by default : special purpose shells and tools, plasma-login-manager would be a second display manager
   case $item in
-    "plasma-mediacenter")  options+=("$item" "" off);;
+    "plasma-bigscreen") options+=("$item" "TV shell (10-foot UI)" off);;
+    "plasma-login-manager") options+=("$item" "Alternative to sddm" off);;
+    "plasma-sdk") options+=("$item" "Plasma development tools" off);;
+    "krdp") options+=("$item" "Remote desktop (RDP) server" off);;
+    "plasma-keyboard") options+=("$item" "On-screen keyboard (touch)" off);;
     *) options+=("$item" "" on);;
   esac
 done
