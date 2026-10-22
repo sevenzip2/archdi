@@ -35,7 +35,7 @@ for itm in $sel; do
   pkg="$pkg $(echo $itm | sed 's/"//g')"
 done
 
-instpkg "$pkg" "$aurpkg"
+instpkg "$pkg" "$aurpkg" || exit 1
 
 clear
 echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"

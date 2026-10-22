@@ -41,7 +41,7 @@ if [ "$multilib" = "true" ]; then
   fi
 fi
 
-instpkg "$pkg" "$aurpkg"
+instpkg "$pkg" "$aurpkg" || exit 1
 
 if [[ "$pkg" == *"gamemode"* ]]; then
   dialog --backtitle "$apptitle" --title "Games" --msgbox "Add your user to the gamemode group :\n\nusermod -aG gamemode <user>\n\nSteam : launch options gamemoderun %command%" 0 0

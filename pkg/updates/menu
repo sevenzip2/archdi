@@ -131,10 +131,10 @@ case $sel in
   ;;
   'Remove db.lck') rm /var/lib/pacman/db.lck;;
   'Install pacman-contrib')
-    instpkg "pacman-contrib" ""
+    instpkg "pacman-contrib" "" || exit 1
   ;;
   'Install downgrade')
-    instpkg "" "downgrade"
+    instpkg "" "downgrade" || exit 1
   ;;
   'Install paru')
     if(confirm "Paru allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall paru (paru-bin) ?") then

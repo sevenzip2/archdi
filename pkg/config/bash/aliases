@@ -27,7 +27,8 @@ options+=("watch" "watch --color" on)
 options+=("man" "color function" on)
 options+=("mkdir" "mkdir -pv" off)
 
-sel=$(dialog --backtitle "$apptitle" --title "Aliases in /etc/profile.d/alias.sh :" --cancel-button "Back" --checklist "" 0 0 0 \
+# One tag per line : dialog quotes and escapes tags like ls(2) otherwise
+sel=$(dialog --backtitle "$apptitle" --title "Aliases in /etc/profile.d/alias.sh :" --cancel-button "Back" --separate-output --checklist "" 0 0 0 \
   "${options[@]}" \
   3>&1 1>&2 2>&3)
 if [ ! "$?" = "0" ]; then

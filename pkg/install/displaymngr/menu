@@ -22,23 +22,23 @@ sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 
 case $sel in
   "gdm")
-    instpkg gdm
+    instpkg gdm || exit 1
     dmenable gdm
   ;;
   "sddm")
-    instpkg sddm
+    instpkg sddm || exit 1
     dmenable sddm
   ;;
   "plasma-login-manager")
-    instpkg plasma-login-manager
+    instpkg plasma-login-manager || exit 1
     dmenable plasmalogin "Plasma Login Manager"
   ;;
   "cosmic-greeter")
-    instpkg cosmic-greeter
+    instpkg cosmic-greeter || exit 1
     dmenable cosmic-greeter "COSMIC Greeter"
   ;;
   "ly")
-    instpkg ly
+    instpkg ly || exit 1
     dmenable ly@tty2 "Ly"
     # ly runs on tty2 instead of its getty
     if systemctl is-enabled -q ly@tty2.service 2>/dev/null; then
@@ -46,7 +46,7 @@ case $sel in
     fi
   ;;
   "greetd")
-    instpkg "greetd greetd-tuigreet"
+    instpkg "greetd greetd-tuigreet" || exit 1
     if [ -f /etc/greetd/config.toml ]&&[ ! -f /etc/greetd/config.toml.archdi.bak ]; then
       cp /etc/greetd/config.toml /etc/greetd/config.toml.archdi.bak
     fi
@@ -61,11 +61,11 @@ EOF
     dmenable greetd
   ;;
   "lightdm-gtk-greeter")
-    instpkg lightdm-gtk-greeter
+    instpkg lightdm-gtk-greeter || exit 1
     dmenable lightdm
   ;;
   "lxdm")
-    instpkg lxdm
+    instpkg lxdm || exit 1
     dmenable lxdm
   ;;
 esac

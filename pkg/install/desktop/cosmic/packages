@@ -19,7 +19,7 @@ for itm in $sel; do
   pkg="$pkg $(echo $itm | sed 's/"//g')"
 done
 
-instpkg "$pkg" "$aurpkg"
+instpkg "$pkg" "$aurpkg" || exit 1
 
 for itm in $sel; do
   case $itm in

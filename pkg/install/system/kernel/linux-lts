@@ -19,7 +19,7 @@ for itm in $sel; do
   esac
 done
 
-instpkg "$pkg" "$aurpkg"
+instpkg "$pkg" "$aurpkg" || exit 1
 clear
 addkernelboot linux-lts
 pressanykey

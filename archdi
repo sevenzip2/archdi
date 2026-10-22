@@ -13,8 +13,8 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.06.18.02 (GPLv3)"
-version="2026.10.22.06.18.02"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.09.19.03 (GPLv3)"
+version="2026.10.22.09.19.03"
 cachedir=~/.cache/archdi
 
 githubuser=sevenzip2
@@ -70,7 +70,10 @@ run(){
   cd $cachedir 2>/dev/null
   
   if [ ! "$pkgdir" = "" ]; then
-    cp -r "$pkgdir"/. . >/dev/null
+    if ! cp -r "$pkgdir"/. .; then
+      echo "Unable to copy $pkgdir"
+      exit 1
+    fi
   else
     if [ "$pkgurl" == "" ]; then
       if ! curl -fsSL $liburl -o lib; then
@@ -184,8 +187,12 @@ while (( "$#" )); do
     ;;
     -l | --local)
       shift
-      apptitle="Arch Linux Desktop Install (archdi) - Version: local ($1)"
-      pkgdir="$1"
+      # run() works from the cache dir, a relative path must be resolved here
+      if ! pkgdir=$(cd "$1" 2>/dev/null && pwd)||[ ! -f "$pkgdir/lib" ]; then
+        echo "$1 is not an archdi pkg dir (no lib file)"
+        exit 1
+      fi
+      apptitle="Arch Linux Desktop Install (archdi) - Version: local ($pkgdir)"
     ;;
     -t | --test)
       shift

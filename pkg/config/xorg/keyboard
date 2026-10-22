@@ -4,7 +4,7 @@
 pacman -Q libxkbcommon 2> /dev/null
 if [ "$?" = "1" ]; then
   if(confirm "libxkbcommon is required to use localectl.\n\nInstall libxkbcommon?") then
-    instpkg "libxkbcommon" ""
+    instpkg "libxkbcommon" "" || exit 1
   else
     exit 1
   fi
@@ -75,10 +75,16 @@ if [ "$option" = "ignore" ]; then
 fi
 
 
-if ( confirm "Run localectl set-x11-keymap $layout $model $variant $option ?") then
+# Arguments are positional (layout model variant options), keep the empty ones in the middle
+args=("$layout" "$model" "$variant" "$option")
+while [ "${#args[@]}" -gt 1 ]&&[ "${args[-1]}" = "" ]; do
+  unset 'args[-1]'
+done
+cmd="localectl set-x11-keymap$(printf ' "%s"' "${args[@]}")"
+if ( confirm "Run $cmd ?") then
   clear
-  echo "localectl set-x11-keymap $layout $model $variant $option"
-  localectl set-x11-keymap $layout $model $variant $option
+  echo "$cmd"
+  localectl set-x11-keymap "${args[@]}"
   pressanykey
 fi
 

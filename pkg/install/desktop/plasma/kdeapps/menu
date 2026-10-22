@@ -20,12 +20,12 @@ sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 case $sel in
   'Full Meta')
     if ( confirm "This option install all KDE applications with meta packages.\n\nInstall KDE Meta Full (pacman -S kde-applications-meta) ?" ) then
-      instpkg "kde-applications-meta" ""
+      instpkg "kde-applications-meta" "" || exit 1
     fi
   ;;
   'Full')
     if ( confirm "This option install all KDE applications.\n\nInstall KDE Full (pacman -S kde-applications) ?" ) then
-      instpkg "kde-applications" ""
+      instpkg "kde-applications" "" || exit 1
     fi
   ;;
   'Selective') script install/desktop/plasma/kdeapps/kdeapps;;

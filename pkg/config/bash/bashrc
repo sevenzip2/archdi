@@ -7,10 +7,12 @@ fi
 if ( confirm "Replace /root/.bashrc ?\n\n(content of the file : source /etc/profile)" ) then
   echo "source /etc/profile" > /root/.bashrc
 fi
-items=$(ls /home/)
-for item in $items; do
-  if ( confirm "Replace /home/$items/.bashrc ?\n\n(content of the file : source /etc/profile)" ) then
-    echo "source /etc/profile" > /home/$items/.bashrc
+for home in /home/*/; do
+  [ -d "$home" ] || continue
+  if ( confirm "Replace ${home}.bashrc ?\n\n(content of the file : source /etc/profile)" ) then
+    echo "source /etc/profile" > "${home}.bashrc"
+    # A new file would belong to root
+    chown --reference="$home" "${home}.bashrc"
   fi
 done
 

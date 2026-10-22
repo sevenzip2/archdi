@@ -61,14 +61,26 @@ for itm in $sel; do
 done
 
 
-instpkg "$pkg" "$aurpkg"
+instpkg "$pkg" "$aurpkg" || exit 1
 
 for itm in $sel; do
   case $itm in
     "networkmanager")
-      systemctl disable dhcpcd
-      if (svcenable NetworkManager) then
-        svcdisable dhcpcd
+      # dhcpcd and NetworkManager must not both manage the network, swap them only when NetworkManager is enabled
+      if systemctl is-enabled -q dhcpcd 2>/dev/null; then
+        if (confirm "dhcpcd manages the network.\n\nReplace it with NetworkManager at boot ?") then
+          clear
+          echo "systemctl enable NetworkManager"
+          if systemctl enable NetworkManager; then
+            echo "systemctl disable dhcpcd"
+            systemctl disable dhcpcd
+          else
+            echo "Unable to enable NetworkManager, dhcpcd is kept."
+          fi
+          pressanykey
+        fi
+      else
+        svcenable NetworkManager
       fi
     ;;
     "openssh")

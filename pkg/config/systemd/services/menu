@@ -20,12 +20,11 @@ sed -i "/^defaultitem=/c\defaultitem=\"$sel\"" $0
 
 case $sel in
   'Enable')
-    services=$(systemctl list-unit-files | grep disabled)
+    # First column only (UNIT FILE STATE PRESET), templates (name@.service) need an instance
+    services=$(systemctl list-unit-files --state=disabled --no-legend --no-pager | awk '$1 !~ /@\./ { print $1 }')
     svclist=()
     for itm in $services; do
-      if [ ! "$itm" == "disabled" ]; then
-        svclist+=("$itm" "" off)
-      fi
+      svclist+=("$itm" "" off)
     done
     sel=$(dialog --backtitle "$apptitle" --title "Enable services :" --cancel-button "Cancel" --checklist "" 0 0 0 \
       "${svclist[@]}" \
@@ -37,12 +36,11 @@ case $sel in
     fi
   ;;
   'Disable')
-    services=$(systemctl list-unit-files | grep enabled)
+    # First column only (UNIT FILE STATE PRESET), templates (name@.service) need an instance
+    services=$(systemctl list-unit-files --state=enabled --no-legend --no-pager | awk '$1 !~ /@\./ { print $1 }')
     svclist=()
     for itm in $services; do
-      if [ ! "$itm" == "enabled" ]; then
-        svclist+=("$itm" "" off)
-      fi
+      svclist+=("$itm" "" off)
     done
     sel=$(dialog --backtitle "$apptitle" --title "Disable services :" --cancel-button "Cancel" --checklist "" 0 0 0 \
       "${svclist[@]}" \

@@ -13,7 +13,7 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.06.18.02 (GPLv3)"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.09.19.03 (GPLv3)"
 baseurl=https://raw.githubusercontent.com/sevenzip2/archdi/master/pkg
 cachedir=~/.cache/archdi
 
@@ -121,7 +121,9 @@ preferpipewirejack(){
 
 # $1: pacman packages
 # $2: aur packages
+# Returns 1 when an installation failed or was cancelled, callers stop before configuring
 instpkg(){
+  instresult=0
   if [ ! "$1" = "" ]; then
     clear
     pkgs=$(preferpipewirejack "$1")
@@ -129,20 +131,23 @@ instpkg(){
       echo "libjack.so is needed : pipewire-jack is used instead of jack2"
     fi
     echo "# pacman -S --needed $pkgs"
-    pacman -S --needed $pkgs
+    pacman -S --needed $pkgs || instresult=1
     pressanykey
   fi
   if [ ! "$2" = "" ]; then
     aurhelper=$(getaurhelper)
     if [ "$aurhelper" = "" ]; then
       echo "To install AUR packages, you need to install an aurhelper in updates menu !"
+      pressanykey
+      instresult=1
     else
       clear
       echo "# sudo -u aurbuilder $aurhelper -S --needed $2"
-      aurrun $aurhelper -S --needed $2
+      aurrun $aurhelper -S --needed $2 || instresult=1
       pressanykey
     fi
   fi
+  return $instresult
 }
 
 
@@ -169,7 +174,6 @@ choosepkg(){
     pkg="$pkg $(echo $itm | sed 's/"//g')"
   done
   instpkg "$pkg" "$aurpkg"
-  return 0
 }
 
 
@@ -201,7 +205,6 @@ chooseaurpkg(){
     aurpkg="$aurpkg $(echo $itm | sed 's/"//g')"
   done
   instpkg "$pkg" "$aurpkg"
-  return 0
 }
 
 
@@ -392,14 +395,15 @@ svcenable(){
     clear
     echo "systemctl enable $1"
     systemctl enable $1
+    svcresult=$?
     pressanykey
-  #else
-  #  exit 1
+    return $svcresult
   fi
+  return 1
 }
 
 # $1 : kernel package just installed (linux, linux-lts...)
-# systemd-boot only boots the kernels it has an entry (or a UKI) for, GRUB needs a new grub.cfg
+# systemd-boot and Syslinux only boot the kernels they have an entry (or a UKI) for, GRUB needs a new grub.cfg
 addkernelboot(){
   kernel=$1
   if [ ! -f /boot/vmlinuz-$kernel ]; then
@@ -432,6 +436,32 @@ addkernelboot(){
           fi
         done
       fi
+    fi
+  fi
+  cfg=/boot/syslinux/syslinux.cfg
+  if [ -f $cfg ]&&! grep -Eq "vmlinuz-$kernel([ ,]|$)" $cfg; then
+    # Copy the first kernel entry (APPEND options, microcode) and point it to the new kernel
+    template=$(awk '/^LABEL /{ blk = ""; inblk = 1 }
+      inblk { blk = blk $0 "\n" }
+      inblk && /^[[:space:]]*$/ { if (blk ~ /vmlinuz-/ && blk !~ /fallback/) { printf "%s", blk; inblk = 0; exit } inblk = 0 }
+      END { if (inblk && blk ~ /vmlinuz-/ && blk !~ /fallback/) printf "%s", blk }' $cfg | sed '/^[[:space:]]*$/d')
+    if [ "$template" = "" ]; then
+      echo "No Syslinux entry to copy, add $kernel to $cfg."
+    else
+      entries=""
+      for variant in "" "-fallback"; do
+        if [ -f /boot/initramfs-$kernel$variant.img ]; then
+          entries="$entries$(echo "$template" | sed -e "s|^LABEL .*|LABEL arch-$kernel${variant#-}|" \
+            -e "s|MENU LABEL .*|MENU LABEL Arch Linux ($kernel${variant:+, fallback})|" \
+            -e "s|vmlinuz-[^ ,]*|vmlinuz-$kernel|" \
+            -e "s|initramfs-[^ ,]*\.img|initramfs-$kernel$variant.img|")"$'\n\n'
+        fi
+      done
+      echo "$cfg : arch-$kernel"
+      # Before the tool entries (hdt, reboot, poweroff)
+      awk -v entries="$entries" '!done && /^LABEL (hdt|reboot|poweroff)/ { printf "%s", entries; done = 1 }
+        { print }
+        END { if (!done) printf "\n%s", entries }' $cfg > $cfg.new && mv $cfg.new $cfg
     fi
   fi
   if [ -f /boot/grub/grub.cfg ]; then
@@ -479,10 +509,11 @@ svcdisable(){
     clear
     echo "systemctl disable $1"
     systemctl disable $1
+    svcresult=$?
     pressanykey
-  #else
-  #  exit 1
+    return $svcresult
   fi
+  return 1
 }
 
 

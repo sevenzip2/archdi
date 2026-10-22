@@ -36,7 +36,7 @@ clrgreen='\e[1;32m'
 clrred='\e[1;31m'
 export PS1="\[$clrwhite\]$USER:\w \`if [ \$? = 0 ]; then echo -e '\[$clrgreen\]'; else echo -e '\[$clrred\]'; fi\`\\$ \[$clrreset\]"
 EOF
-      chmod 755 /etc/profile.d/alias.sh
+      chmod 755 /etc/profile.d/ps1.sh
     ;;
     'User and Hostname') 
       cat > /etc/profile.d/ps1.sh << "EOF"
@@ -47,13 +47,13 @@ clrgreen='\e[1;32m'
 clrred='\e[1;31m'
 export PS1="\[$clrwhite\]$USER@$HOSTNAME:\w \`if [ \$? = 0 ]; then echo -e '\[$clrgreen\]'; else echo -e '\[$clrred\]'; fi\`\\$ \[$clrreset\]"
 EOF
-      chmod 755 /etc/profile.d/alias.sh
+      chmod 755 /etc/profile.d/ps1.sh
     ;;
   esac
 }
 
 if ( confirm "Create /etc/profile.d/ps1.sh and force load it at end of /etc/bash.bashrc ?" ) then
-  updateps1 $sel
+  updateps1 "$sel"
   grep -q -F 'source /etc/profile.d/ps1.sh' /etc/bash.bashrc || echo 'source /etc/profile.d/ps1.sh' >> /etc/bash.bashrc
 fi
 

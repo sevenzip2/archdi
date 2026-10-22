@@ -29,7 +29,7 @@ case $sel in
       # Boot snapshots from the GRUB menu
       pkg="$pkg grub-btrfs inotify-tools"
     fi
-    instpkg "$pkg" ""
+    instpkg "$pkg" "" || exit 1
     clear
     if [ ! -f /etc/snapper/configs/root ]; then
       if mountpoint -q /.snapshots; then
@@ -64,7 +64,7 @@ case $sel in
   ;;
   timeshift)
     # Scheduled snapshots of timeshift run from cron
-    instpkg "timeshift cronie" ""
+    instpkg "timeshift cronie" "" || exit 1
     svcenable cronie
     if [ "$rootfs" = "btrfs" ]; then
       msg="Timeshift btrfs mode needs the root in @ and home in @home (archfi layout)."

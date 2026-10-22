@@ -58,7 +58,7 @@ if [[ " $pkg $aurpkg " == *"-dkms "* ]]; then
   done
 fi
 
-instpkg "$pkg" "$aurpkg"
+instpkg "$pkg" "$aurpkg" || exit 1
 
 for itm in $sel; do
   case $itm in
