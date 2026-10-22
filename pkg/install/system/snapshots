@@ -37,12 +37,12 @@ case $sel in
         # subvolume there, create the config then put @snapshots back
         run umount /.snapshots
         run rmdir /.snapshots
-        run snapper -c root create-config /
+        run snapper --no-dbus -c root create-config /
         run btrfs subvolume delete /.snapshots
         run mkdir /.snapshots
         run mount /.snapshots
       else
-        run snapper -c root create-config /
+        run snapper --no-dbus -c root create-config /
       fi
       run chmod 750 /.snapshots
     else

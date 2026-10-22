@@ -46,8 +46,14 @@ case $sel in
       echo "ufw allow ssh"
       ufw allow ssh
     fi
-    echo "ufw enable"
-    ufw --force enable
+    if inchroot; then
+      # ufw enable would load the rules in the running (live ISO) kernel, only enable it for next boot
+      echo "sed -i 's/^ENABLED=no/ENABLED=yes/' /etc/ufw/ufw.conf"
+      sed -i 's/^ENABLED=no/ENABLED=yes/' /etc/ufw/ufw.conf
+    else
+      echo "ufw enable"
+      ufw --force enable
+    fi
     pressanykey
     svcenable ufw "Firewall at boot"
   ;;

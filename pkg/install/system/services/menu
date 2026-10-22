@@ -81,10 +81,8 @@ for itm in $sel; do
       svcenable bluetooth "Bluetooth Service"
     ;;
     "systemd-timesyncd")
-      clear
-      echo "timedatectl set-ntp true"
-      timedatectl set-ntp true
-      pressanykey
+      # timedatectl needs a running systemd, enabling the unit also works in chroot
+      svcenable systemd-timesyncd "Time synchronization"
     ;;
     "fstrim")
       svcenable fstrim.timer "Weekly SSD trim"

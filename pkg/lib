@@ -187,6 +187,12 @@ editfile(){
 }
 
 
+# True inside arch-chroot (archfi "Install and run archdi"), services can be enabled but not started
+inchroot(){
+  systemd-detect-virt -q --chroot
+}
+
+
 # Enable the [multilib] repository (32-bit packages : steam, wine, lib32-*)
 enablemultilib(){
   if grep -q '^\[multilib\]' /etc/pacman.conf; then
@@ -244,6 +250,10 @@ svcstart(){
     displayname="$1"
   else
     displayname="$2 ($1)"
+  fi
+  if inchroot; then
+    echo "$displayname will start at next boot (chroot)."
+    return 0
   fi
   if (confirm "Start $displayname service ?\n\nsystemctl start $1") then
     clear
