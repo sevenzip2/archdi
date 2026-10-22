@@ -48,9 +48,6 @@ fi
 if [ ! -f /usr/bin/paru ]; then
   options+=("Install paru" "")
 fi
-if [ ! -f /usr/bin/trizen ]; then
-  options+=("Install trizen" "")
-fi
 if [ ! -f /usr/bin/yay ]; then
   options+=("Install yay" "")
 fi
@@ -137,15 +134,9 @@ case $sel in
     instpkg "" "downgrade" || exit 1
   ;;
   'Install paru')
-    if(confirm "Paru allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall paru (paru-bin) ?") then
+    if(confirm "Paru allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall paru ?\n\n(built from source : paru-bin breaks when pacman is updated)") then
       clear
-      aurrun sh -c "rm -rf paru-bin && git clone https://aur.archlinux.org/paru-bin.git && cd paru-bin && makepkg -si"
-    fi
-  ;;
-  'Install trizen')
-    if(confirm "Trizen allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall trizen ?") then
-      clear
-      aurrun sh -c "rm -rf trizen && git clone https://aur.archlinux.org/trizen.git && cd trizen && makepkg -si"
+      aurrun sh -c "rm -rf paru && git clone https://aur.archlinux.org/paru.git && cd paru && makepkg -si"
     fi
   ;;
   'Install yay')

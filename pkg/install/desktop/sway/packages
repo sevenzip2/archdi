@@ -6,7 +6,7 @@ options+=("sway" "Compositor" on)
 options+=("xdg-desktop-portal-wlr" "Screen sharing portal" on)
 options+=("xorg-xwayland" "X11 apps support" on)
 options+=("qt6-wayland" "Qt apps on Wayland" on)
-options+=("polkit-gnome" "Polkit agent" on)
+options+=("mate-polkit" "Polkit agent" on)
 options+=("foot" "Default terminal (Super+Enter)" on)
 options+=("waybar" "Status bar" on)
 # The default /etc/sway/config runs wmenu-run on Super+D
@@ -40,13 +40,25 @@ done
 instpkg "$pkg" "$aurpkg" || exit 1
 
 clear
-# The default config starts no polkit agent (password prompts of GUI apps), /etc/sway/config includes config.d
-if [ -f /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ]; then
-  echo "/etc/sway/config.d/60-archdi-polkit.conf :"
-  mkdir -p /etc/sway/config.d
-  echo "exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" | tee /etc/sway/config.d/60-archdi-polkit.conf
-  echo ""
+# The default config starts swaybar and no polkit agent or tray applet, /etc/sway/config includes config.d
+conf=/etc/sway/config.d/60-archdi.conf
+mkdir -p /etc/sway/config.d
+echo "# Programs installed by archdi" > $conf
+if [ -f /usr/lib/mate-polkit/polkit-mate-authentication-agent-1 ]; then
+  # Password prompts of GUI apps
+  echo "exec /usr/lib/mate-polkit/polkit-mate-authentication-agent-1" >> $conf
 fi
+if [ -f /usr/bin/waybar ]; then
+  # bar-0 is the bar of /etc/sway/config
+  echo "bar bar-0 swaybar_command waybar" >> $conf
+fi
+if [ -f /usr/bin/nm-applet ]; then
+  # waybar shows StatusNotifierItem icons only
+  echo "exec nm-applet --indicator" >> $conf
+fi
+echo "$conf :"
+cat $conf
+echo ""
 echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"
 echo "  sway"
 echo "Copy /etc/sway/config to ~/.config/sway/config to customize it."

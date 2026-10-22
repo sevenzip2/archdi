@@ -12,7 +12,6 @@ for item in $items; do
     "dolphin" | \
     "elisa" | \
     "ffmpegthumbs" | \
-    "filesharing" | \
     "gwenview" | \
     "kate" | \
     "kcalc" | \
@@ -32,16 +31,13 @@ for item in $items; do
     "konsole" | \
     "ksystemlog" | \
     "kwalletmanager" | \
-    "kwrite" | \
     "markdownpart" | \
     "okular" | \
     "partitionmanager" | \
     "print-manager" | \
     "signon-kwallet-extension" | \
     "spectacle" | \
-    "svgpart" | \
-    "thumbnailers" | \
-    "zeroconf-ioslave") options+=("$item" "" on);;
+    "svgpart") options+=("$item" "" on);;
     *) options+=("$item" "" off);;
   esac
 done

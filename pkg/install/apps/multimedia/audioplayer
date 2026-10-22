@@ -8,7 +8,6 @@ options+=("quodlibet" "(GTK) Audio Player" off)
 options+=("elisa" "(QT) Audio Player" off)
 options+=("amarok" "(QT) Audio Player" off)
 options+=("guayadeque" "(AUR) (GTK) Audio Player" off)
-options+=("gmusicbrowser" "(AUR) (GTK) Audio Player" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Audio Player applications :" --cancel-button "Back" --checklist "Choose what you want" 0 0 0 \
   "${options[@]}" \
@@ -19,8 +18,7 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "guayadeque" | \
-    "gmusicbrowser") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    "guayadeque") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

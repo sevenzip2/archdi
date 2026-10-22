@@ -20,7 +20,6 @@ options+=("base-devel" "Build tools" off)
 options+=("fwupd" "Firmware upgrade" off)
 options+=("powertop" "power mon and management" off)
 options+=("gpm" "Console mouse support" off)
-options+=("liveroot" "(AUR) root overlay fs" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Console Generic packages :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \
@@ -31,7 +30,6 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "liveroot") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

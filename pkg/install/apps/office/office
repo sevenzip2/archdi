@@ -14,7 +14,6 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "calcoo") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

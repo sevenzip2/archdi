@@ -5,8 +5,6 @@ options+=("gparted" "(GTK) Partitions manager" off)
 options+=("bleachbit" "(GTK) profile cleaner" off)
 options+=("keepassxc" "(QT) Password Manager" off)
 options+=("keepass" "(MONO) Password Manager" off)
-#options+=("keepassx2" "(QT) Password Manager" off)
-#options+=("keepassx" "(QT) Password Manager" off)
 options+=("virtualbox" "(QT) Virtualization software" off)
 options+=("virtualbox-ext-oracle" "(AUR) Ext Pack" off)
 options+=("wine" "MS Windows App Support" off)
@@ -15,7 +13,7 @@ options+=("wine-mono" "MS Windows App Support" off)
 options+=("zenity" "recommended for wine" off)
 options+=("winetricks" "recommended for wine" off)
 options+=("q4wine" "(AUR)" off)
-options+=("gdmap" "(AUR)" off)
+options+=("baobab" "(GTK) Disk usage analyzer" off)
 options+=("k4dirstat" "(AUR)" off)
 options+=("conky" "" off)
 
@@ -28,7 +26,6 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "keepassx-git" | \
     "virtualbox-ext-oracle" | \
     "k4dirstat") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     "wine" | \
@@ -41,8 +38,7 @@ for itm in $sel; do
       pkg="$pkg virtualbox virtualbox-host-dkms"
       pkg="$pkg$(dkmsheaders "$pkg")"
     ;;
-    "q4wine" | \
-    "gdmap") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    "q4wine") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

@@ -4,7 +4,6 @@
 options=()
 options+=("k3b" "(QT)" off)
 options+=("xfburn" "(GTK)" off)
-#options+=("xorriso-tcltk" "libisoburn tk kjobwidgets" off)
 options+=("brasero" "(GTK)" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Burner applications :" --cancel-button "Back" --checklist "Choose what you want" 0 0 0 \
@@ -16,7 +15,6 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "xorriso-tcltk") pkg="$pkg libisoburn tk kjobwidgets";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

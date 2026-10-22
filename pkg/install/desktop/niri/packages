@@ -6,7 +6,7 @@ options+=("niri" "Scrollable tiling compositor" on)
 options+=("xwayland-satellite" "X11 apps support" on)
 options+=("qt6-wayland" "Qt apps on Wayland" on)
 options+=("xdg-desktop-portal-gnome" "Screen sharing portal" on)
-options+=("polkit-gnome" "Polkit agent" on)
+options+=("mate-polkit" "Polkit agent" on)
 options+=("alacritty" "Default terminal" on)
 options+=("fuzzel" "Default app launcher" on)
 options+=("waybar" "Status bar" on)
@@ -39,8 +39,10 @@ instpkg "$pkg" "$aurpkg" || exit 1
 
 clear
 # The default config starts no polkit agent (password prompts of GUI apps), niri-session runs xdg autostart
-if [ -f /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ]; then
-  polkitautostart niri /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+# (waybar is started by the default config, nm-applet has its own autostart entry)
+if [ -f /usr/lib/mate-polkit/polkit-mate-authentication-agent-1 ]; then
+  autostartin niri polkit /usr/lib/mate-polkit/polkit-mate-authentication-agent-1
+  echo ""
 fi
 echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"
 echo "  niri-session"

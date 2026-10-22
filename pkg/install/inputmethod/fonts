@@ -6,7 +6,7 @@ options+=("noto-fonts-cjk" "Noto Sans/Serif CJK (recommended)" on)
 options+=("adobe-source-han-sans-kr-fonts" "Source Han Sans KR" off)
 options+=("adobe-source-han-serif-kr-fonts" "Source Han Serif KR" off)
 options+=("ttf-baekmuk" "Baekmuk" off)
-options+=("ttf-nanum" "(AUR) Nanum" off)
+options+=("ttf-nanum" "(AUR, orphaned) Nanum" off)
 options+=("ttf-d2coding" "(AUR) D2Coding, coding font" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Korean Fonts :" --cancel-button "Back" --checklist "" 0 0 0 \

@@ -6,7 +6,6 @@ options+=("sddm" "Display manager" on)
 options+=("oxygen-icons" "Alternative icon theme (breeze is the default)" off)
 options+=("connman" "Network manager (conflicts with NetworkManager)" off)
 options+=("obconf-qt" "" on)
-options+=("lxqt-connman-applet-git" "(AUR) Applet for NM" off)
 
 
 sel=$(dialog --backtitle "$apptitle" --title "LXQt Complements :" --cancel-button "Back" --checklist "" 0 0 0 \
@@ -18,7 +17,6 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "lxqt-connman-applet-git") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

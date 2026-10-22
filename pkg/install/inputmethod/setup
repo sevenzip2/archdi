@@ -86,7 +86,7 @@ case $im in
 esac
 
 if [ ! "$aurpkg" = "" ]&&[ "$(getaurhelper)" = "" ]; then
-  dialog --backtitle "$apptitle" --title "Korean Input Method :" --msgbox "$im is in the AUR.\n\nInstall an AUR helper (paru, yay or trizen) in the Updates menu first." 0 0
+  dialog --backtitle "$apptitle" --title "Korean Input Method :" --msgbox "$im is in the AUR.\n\nInstall an AUR helper (paru or yay) in the Updates menu first." 0 0
   exit 1
 fi
 

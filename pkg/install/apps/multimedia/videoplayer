@@ -7,7 +7,6 @@ options+=("smplayer" "(QT) Video player" off)
 options+=("smtube" "(AUR) (QT) Youtube Player" off)
 options+=("mpv" "(GTK) Recommended for smplayer" off)
 options+=("celluloid" "(GTK) Video player" off)
-#options+=("streamstudio-bin" "(AUR) Stream video Player" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Video Player applications :" --cancel-button "Back" --checklist "Choose what you want" 0 0 0 \
   "${options[@]}" \
@@ -18,8 +17,7 @@ fi
 
 for itm in $sel; do
   case $itm in
-    "smtube" | \
-    "streamstudio-bin") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    "smtube") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
     *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
   esac
 done

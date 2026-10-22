@@ -43,9 +43,14 @@ instpkg "$pkg" "$aurpkg" || exit 1
 
 clear
 # The default config starts no polkit agent (password prompts of GUI apps), uwsm runs xdg autostart
+# The status bar is not started either, nm-applet has its own autostart entry
 if [ -f /usr/lib/hyprpolkitagent/hyprpolkitagent ]; then
-  polkitautostart Hyprland /usr/lib/hyprpolkitagent/hyprpolkitagent
+  autostartin Hyprland polkit /usr/lib/hyprpolkitagent/hyprpolkitagent
 fi
+if [ -f /usr/bin/waybar ]; then
+  autostartin Hyprland waybar /usr/bin/waybar
+fi
+echo ""
 echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"
 echo "  uwsm start hyprland.desktop"
 echo "A default config is created in ~/.config/hypr at first start."
