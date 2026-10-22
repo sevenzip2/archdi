@@ -13,8 +13,8 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.36.50 (GPLv3)"
-version="2026.10.22.10.36.50"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.47.39 (GPLv3)"
+version="2026.10.22.10.47.39"
 cachedir=~/.cache/archdi
 
 githubuser=sevenzip2
@@ -52,8 +52,15 @@ install(){
   dependencies
   echo "Install $apptitle ..."
   echo ""
-  chmod 755 $0 2>/dev/null
-  mv $0 /usr/local/bin/archdi 2>/dev/null
+  if [ ! "$(readlink -f "$0")" = "/usr/local/bin/archdi" ]; then
+    # install never waits on a "replace ?" question and the file belongs to root even when downloaded by a user
+    if ! command install -m 755 -o root -g root "$0" /usr/local/bin/archdi; then
+      echo ""
+      echo "Unable to install /usr/local/bin/archdi"
+      exit 1
+    fi
+    rm -f "$0"
+  fi
   echo ""
   echo "$apptitle is installed."
   echo "type archdi to start."
@@ -163,7 +170,7 @@ chkupgrade(){
       if (dialog --backtitle "$apptitle" --yesno "New version found !\n\nInstall last version ?" 0 0) then
         cd /tmp
         if curl -fsSL $binurl -o archdi; then
-          sh archdi -i
+          bash archdi -i
           exit 0
         fi
         echo "Unable to download $binurl"
@@ -171,6 +178,15 @@ chkupgrade(){
     fi
   fi
 }
+
+# pacman, /usr/local/bin and the upgrade need root : a user account restarts archdi with sudo
+if [ ! "$(id -u)" = "0" ]&&[ ! "$1" = "-h" ]&&[ ! "$1" = "--help" ]; then
+  if command -v sudo >/dev/null; then
+    exec sudo bash "$(readlink -f "$0")" "$@"
+  fi
+  echo "Run archdi as root"
+  exit 1
+fi
 
 branchoption=""
 while (( "$#" )); do
