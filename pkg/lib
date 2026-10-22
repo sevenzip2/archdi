@@ -13,7 +13,7 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.09.37.18 (GPLv3)"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.09.49.32 (GPLv3)"
 baseurl=https://raw.githubusercontent.com/sevenzip2/archdi/master/pkg
 cachedir=~/.cache/archdi
 
@@ -260,15 +260,23 @@ inchroot(){
 
 
 # Enable the [multilib] repository (32-bit packages : steam, wine, lib32-*)
+# Returns 1 when multilib is not usable (refused, or the -Syu failed or was cancelled)
 enablemultilib(){
-  if grep -q '^\[multilib\]' /etc/pacman.conf; then
+  if grep -q '^\[multilib\]' /etc/pacman.conf&&[ -f /var/lib/pacman/sync/multilib.db ]; then
     return 0
   fi
   if (confirm "32-bit packages need the multilib repository.\n\nUncomment [multilib] in /etc/pacman.conf and run pacman -Syu ?") then
     clear
     sed -i '/^#\[multilib\]/{s/^#//;n;s/^#//}' /etc/pacman.conf
+    echo "# pacman -Syu"
     pacman -Syu
-    return 0
+    syncresult=$?
+    if [ ! "$syncresult" = "0" ]; then
+      echo ""
+      echo "The system is not upgraded, 32-bit packages are not installed."
+    fi
+    pressanykey
+    return $syncresult
   fi
   return 1
 }

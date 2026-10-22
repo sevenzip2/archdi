@@ -6,9 +6,11 @@ options+=("hyprland" "Compositor" on)
 options+=("xdg-desktop-portal-hyprland" "Screen sharing portal" on)
 options+=("hyprpolkitagent" "Polkit agent" on)
 options+=("uwsm" "Session manager (runs xdg autostart)" on)
-options+=("kitty" "Default terminal" on)
+options+=("kitty" "Default terminal (Super+Q)" on)
 options+=("waybar" "Status bar" on)
-options+=("fuzzel" "App launcher" on)
+# The default config runs hyprlauncher on Super+R
+options+=("hyprlauncher" "Default app launcher (Super+R)" on)
+options+=("fuzzel" "App launcher (set menu to fuzzel)" off)
 options+=("mako" "Notifications" on)
 options+=("hyprpaper" "Wallpaper" on)
 options+=("hyprlock" "Screen locker" on)
@@ -40,7 +42,7 @@ instpkg "$pkg" "$aurpkg" || exit 1
 clear
 echo "Start it from a display manager (ly, greetd, sddm...) or from a TTY with :"
 echo "  uwsm start hyprland.desktop"
-echo "A default config is created in ~/.config/hypr/hyprland.conf at first start."
+echo "A default config is created in ~/.config/hypr at first start."
 pressanykey
 
 exit 0

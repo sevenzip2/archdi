@@ -34,7 +34,12 @@ case $sel in
         fi
         clear
         echo "useradd -m $groups -s /bin/bash $username"
-        useradd -m $groups -s /bin/bash $username
+        if ! useradd -m $groups -s /bin/bash $username; then
+          echo ""
+          echo "Unable to create $username."
+          pressanykey
+          exit 0
+        fi
         if [ ! "$groups" = "" ]; then
           if ! grep -qsE '^\s*%wheel\s+ALL' /etc/sudoers /etc/sudoers.d/*; then
             echo "Enable sudo for wheel group (/etc/sudoers.d/10-wheel)"
@@ -47,6 +52,12 @@ case $sel in
         echo ""
         until passwd $username; do
           echo ""
+          if ! (confirm "The password of $username is not set.\n\nTry again ?") then
+            clear
+            echo "Set it later with : passwd $username"
+            break
+          fi
+          clear
         done
         grpck
         pressanykey
