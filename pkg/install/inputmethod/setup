@@ -4,6 +4,8 @@
 envfile=/etc/environment
 xdgdir=/etc/xdg
 autostart=$xdgdir/autostart/archdi-inputmethod.desktop
+# Sway runs no xdg autostart file, /etc/sway/config includes config.d
+swayconf=/etc/sway/config.d/60-archdi-inputmethod.conf
 blockbegin="# archdi input method begin"
 blockend="# archdi input method end"
 
@@ -26,11 +28,11 @@ fi
 # Environment variables and autostart from a previous run
 cleanim(){
   sed -i "/^$blockbegin\$/,/^$blockend\$/d" $envfile
-  rm -f $autostart
+  rm -f $autostart $swayconf
 }
 
 if [ "$im" = "none" ]; then
-  if (confirm "Remove the input method variables from $envfile\nand $autostart ?") then
+  if (confirm "Remove the input method variables from $envfile\nand $autostart, $swayconf ?") then
     clear
     cleanim
     echo "Input method settings removed, log out to apply."
@@ -200,6 +202,13 @@ if [ "$needautostart" = "1" ]; then
     } > $autostart
   fi
 fi
+if [ -f /usr/bin/sway ]; then
+  echo ""
+  echo "$swayconf :"
+  echo "  exec $daemon"
+  mkdir -p /etc/sway/config.d
+  echo "exec $daemon" > $swayconf
+fi
 
 if [ "$im" = "fcitx5" ]; then
   echo ""
@@ -273,7 +282,8 @@ case $session in
   wlroots)
     # Compositors do not run xdg autostart files unless started with uwsm or dex
     niriargs=$(for word in $daemon; do printf ' "%s"' "$word"; done)
-    echo "Start $im from your compositor config if it does not run xdg autostart files :"
+    echo "niri (niri-session) and Hyprland (uwsm) run the xdg autostart files, Sway uses $swayconf."
+    echo "Without them, start $im from your compositor config :"
     echo "  Hyprland : exec-once = $daemon"
     echo "  Sway     : exec $daemon"
     echo "  niri     : spawn-at-startup$niriargs"

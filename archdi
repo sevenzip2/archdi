@@ -13,8 +13,8 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.56.58 (GPLv3)"
-version="2026.10.22.10.56.58"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.11.05.20 (GPLv3)"
+version="2026.10.22.11.05.20"
 # Not in ~ : sudo may keep the HOME of the user
 cachedir=/var/cache/archdi
 
