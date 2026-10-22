@@ -3,10 +3,12 @@
 
 options=()
 
-items=$(pacman -Ssq lxqt)
+# The lxqt group, not a search : the search misses qterminal and openbox and adds build tools
+items=$(pacman -Sqg lxqt)
 for item in $items; do
   options+=("$item" "" on)
 done
+options+=("lxqt-wayland-session" "Wayland session (needs a compositor : labwc, kwin...)" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "LXQT Install :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \

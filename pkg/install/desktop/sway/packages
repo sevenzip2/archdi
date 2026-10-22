@@ -4,6 +4,8 @@
 options=()
 options+=("sway" "Compositor" on)
 options+=("xdg-desktop-portal-wlr" "Screen sharing portal" on)
+options+=("xorg-xwayland" "X11 apps support" on)
+options+=("qt6-wayland" "Qt apps on Wayland" on)
 options+=("polkit-gnome" "Polkit agent" on)
 options+=("foot" "Default terminal (Super+Enter)" on)
 options+=("waybar" "Status bar" on)

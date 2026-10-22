@@ -3,8 +3,8 @@
 
 options=()
 options+=("sddm" "Display manager" on)
-options+=("oxygen-icons" "Default Icon Theme" on)
-options+=("connman" "Network Manager" on)
+options+=("oxygen-icons" "Alternative icon theme (breeze is the default)" off)
+options+=("connman" "Network manager (conflicts with NetworkManager)" off)
 options+=("obconf-qt" "" on)
 options+=("lxqt-connman-applet-git" "(AUR) Applet for NM" off)
 

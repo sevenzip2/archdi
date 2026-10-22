@@ -25,9 +25,9 @@ options+=("vpl-gpu-rt" "Intel Quick Sync (oneVPL)" off)
 options+=("vulkan-nouveau" "NVIDIA open source Vulkan (NVK)" off)
 options+=("vulkan-virtio" "Virtual machine Vulkan (virtio-gpu)" $virtio)
 if [ "$multilib" = "1" ]; then
-  options+=("lib32-mesa" "32-bit (Steam, Wine)" off)
-  options+=("lib32-vulkan-radeon" "32-bit AMD Vulkan" off)
-  options+=("lib32-vulkan-intel" "32-bit Intel Vulkan" off)
+  options+=("lib32-mesa" "32-bit (Steam, Wine)" on)
+  options+=("lib32-vulkan-radeon" "32-bit AMD Vulkan" $amd)
+  options+=("lib32-vulkan-intel" "32-bit Intel Vulkan" $intel)
   options+=("lib32-vulkan-nouveau" "32-bit NVK" off)
 fi
 options+=("mesa-utils" "glxinfo, eglinfo" off)

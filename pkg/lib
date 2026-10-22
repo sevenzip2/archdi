@@ -13,7 +13,7 @@
 
 
 
-apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.12.36 (GPLv3)"
+apptitle="Arch Linux Desktop Install (archdi) - Version: 2026.10.22.10.20.13 (GPLv3)"
 baseurl=https://raw.githubusercontent.com/sevenzip2/archdi/master/pkg
 cachedir=~/.cache/archdi
 
@@ -408,6 +408,19 @@ svcenable(){
     return $svcresult
   fi
   return 1
+}
+
+# echo the headers of the installed kernels that are missing from $1
+# DKMS builds its modules for every installed kernel, the headers are only optional dependencies of dkms
+dkmsheaders(){
+  for pkgbase in /usr/lib/modules/*/pkgbase; do
+    if [ -f "$pkgbase" ]; then
+      headers="$(cat "$pkgbase")-headers"
+      if [[ " $1 " != *" $headers "* ]]&&pacman -Si $headers &>/dev/null; then
+        echo -n " $headers"
+      fi
+    fi
+  done
 }
 
 # $1 : kernel package just installed (linux, linux-lts...)

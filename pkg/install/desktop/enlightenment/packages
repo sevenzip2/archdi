@@ -5,8 +5,8 @@ options=()
 
 package=""
 options+=("enlightenment" "" on)
-options+=("connman" "" on)
-options+=("acpid" "" on)
+options+=("connman" "Network manager for the E module (conflicts with NetworkManager)" off)
+options+=("acpid" "Legacy ACPI events (systemd-logind handles them)" off)
 options+=("terminology" "Terminal" on)
 
 sel=$(dialog --backtitle "$apptitle" --title "Enlightenment Install :" --cancel-button "Back" --checklist "" 0 0 0 \

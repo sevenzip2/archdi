@@ -4,6 +4,7 @@
 options=()
 options+=("niri" "Scrollable tiling compositor" on)
 options+=("xwayland-satellite" "X11 apps support" on)
+options+=("qt6-wayland" "Qt apps on Wayland" on)
 options+=("xdg-desktop-portal-gnome" "Screen sharing portal" on)
 options+=("polkit-gnome" "Polkit agent" on)
 options+=("alacritty" "Default terminal" on)

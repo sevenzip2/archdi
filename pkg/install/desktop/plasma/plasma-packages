@@ -6,13 +6,17 @@ options=()
 package="plasma"
 items=$(pacman -Sqg $package)
 for item in $items; do
-  # Off by default : special purpose shells and tools, plasma-login-manager would be a second display manager
+  # Off by default : special purpose shells and tools, legacy themes, plasma-login-manager would be a second display manager
   case $item in
     "plasma-bigscreen") options+=("$item" "TV shell (10-foot UI)" off);;
     "plasma-login-manager") options+=("$item" "Alternative to sddm" off);;
     "plasma-sdk") options+=("$item" "Plasma development tools" off);;
     "krdp") options+=("$item" "Remote desktop (RDP) server" off);;
     "plasma-keyboard") options+=("$item" "On-screen keyboard (touch)" off);;
+    "oxygen" | "oxygen-cursors" | "oxygen-sounds") options+=("$item" "Legacy Oxygen theme" off);;
+    "breeze-plymouth" | "plymouth-kcm") options+=("$item" "Boot splash, needs plymouth in mkinitcpio" off);;
+    "discover") options+=("$item" "App store (PackageKit), Flatpak menu adds it with flatpak" off);;
+    "kup") options+=("$item" "Backup tool" off);;
     *) options+=("$item" "" on);;
   esac
 done

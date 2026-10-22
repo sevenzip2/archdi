@@ -37,7 +37,9 @@ for itm in $sel; do
       pkg="$pkg $(echo $itm | sed 's/"//g')"
     ;;
     "virtualbox" )
-      pkg="$pkg $(echo $itm | sed 's/"//g')"
+      # The host modules are built by DKMS (virtualbox-host-modules-arch is gone), it needs the kernel headers
+      pkg="$pkg virtualbox virtualbox-host-dkms"
+      pkg="$pkg$(dkmsheaders "$pkg")"
     ;;
     "q4wine" | \
     "gdmap") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;

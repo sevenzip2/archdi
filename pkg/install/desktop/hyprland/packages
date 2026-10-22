@@ -4,6 +4,7 @@
 options=()
 options+=("hyprland" "Compositor" on)
 options+=("xdg-desktop-portal-hyprland" "Screen sharing portal" on)
+options+=("qt6-wayland" "Qt apps on Wayland" on)
 options+=("hyprpolkitagent" "Polkit agent" on)
 options+=("uwsm" "Session manager (runs xdg autostart)" on)
 options+=("kitty" "Default terminal (Super+Q)" on)

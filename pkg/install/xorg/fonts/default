@@ -6,10 +6,10 @@ options+=("noto-fonts" "Noto, wide unicode coverage" on)
 options+=("noto-fonts-cjk" "Chinese, Japanese, Korean" on)
 options+=("noto-fonts-emoji" "Color emoji" on)
 options+=("gsfonts" "" on)
-options+=("ttf-bitstream-vera" "" on)
+options+=("ttf-bitstream-vera" "Replaced by DejaVu" off)
 options+=("ttf-dejavu" "" on)
 options+=("ttf-liberation" "" on)
-options+=("xorg-fonts-type1" "" on)
+options+=("xorg-fonts-type1" "Type 1, not used by GTK/Qt" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Default Fonts :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \

@@ -3,7 +3,7 @@
 
 options=()
 options+=("linux-lts" "" on)
-options+=("linux-lts-headers" "" on)
+options+=("linux-lts-headers" "For DKMS modules (added by the driver menus)" off)
 options+=("linux-lts-docs" "" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Kernel Linux LTS Install" --cancel-button "Back" --checklist "" 0 0 0 \

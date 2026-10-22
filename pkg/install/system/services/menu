@@ -3,10 +3,15 @@
 
 options=()
 options+=("networkmanager" "Network Management" on)
-options+=("openssh" "Server SSH" on)
+options+=("openssh" "Server SSH (remote login)" off)
 options+=("cronie" "Cron tasks server" off)
 options+=("xdg-user-dirs" "Create user directories" on)
-options+=("numlockon" "numlock on on tty" on)
+# Laptop keyboards without a keypad can have digits on letter keys when numlock is on
+if ls /sys/class/power_supply/BAT* &>/dev/null; then
+  options+=("numlockon" "numlock on on tty" off)
+else
+  options+=("numlockon" "numlock on on tty" on)
+fi
 options+=("systemd-timesyncd" "Time synchronization (NTP client)" on)
 # fstrim is useful when the system has SSD/NVMe drives
 if [ "$(lsblk -dno ROTA 2>/dev/null | grep -c 0)" != "0" ]; then
