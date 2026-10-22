@@ -7,6 +7,7 @@ options+=("System" "")
 options+=("XOrg" "")
 options+=("Desktop Environment" "")
 options+=("Display Manager" "")
+options+=("Input Method" "Korean (fcitx5, ibus, kime, nimf, uim)")
 options+=("Applications" "")
 
 defaultitem=""
@@ -23,6 +24,7 @@ case $sel in
   "System") menu install/system/menu;;
   "XOrg") menu install/xorg/menu;;
   "Display Manager") menu install/displaymngr/menu;;
+  "Input Method") menu install/inputmethod/menu;;
   "Desktop Environment") menu install/desktop/menu;;
   "Applications") menu install/apps/menu;;
 esac

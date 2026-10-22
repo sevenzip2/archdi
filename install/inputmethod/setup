@@ -1,0 +1,219 @@
+#!/bin/bash
+. ./lib
+
+envfile=/etc/environment
+xdgdir=/etc/xdg
+autostart=$xdgdir/autostart/archdi-inputmethod.desktop
+blockbegin="# archdi input method begin"
+blockend="# archdi input method end"
+
+options=()
+options+=("fcitx5" "Fcitx 5 + fcitx5-hangul (recommended)")
+options+=("ibus" "IBus + ibus-hangul (GNOME default)")
+options+=("kime" "(AUR) Korean IME written in Rust")
+options+=("nimf" "(AUR) Nimf input method framework")
+options+=("uim" "(AUR) uim with byeoru, orphaned package")
+options+=("" "")
+options+=("none" "Remove the input method settings made by archdi")
+
+im=$(dialog --backtitle "$apptitle" --title "Korean Input Method :" --cancel-button "Back" --menu "Choose your input method :" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]||[ "$im" = "" ]; then
+  exit 1
+fi
+
+# Environment variables and autostart from a previous run
+cleanim(){
+  sed -i "/^$blockbegin\$/,/^$blockend\$/d" $envfile
+  rm -f $autostart
+}
+
+if [ "$im" = "none" ]; then
+  if (confirm "Remove the input method variables from $envfile\nand $autostart ?") then
+    clear
+    cleanim
+    echo "Input method settings removed, log out to apply."
+    pressanykey
+  fi
+  exit 0
+fi
+
+options=()
+options+=("plasma-wayland" "KDE Plasma (Wayland)")
+options+=("other" "GNOME, Xorg sessions, Hyprland, Sway, niri, COSMIC...")
+session=$(dialog --backtitle "$apptitle" --title "Desktop session :" --cancel-button "Back" --menu "Where will you use $im ?" 0 0 0 \
+  "${options[@]}" \
+  3>&1 1>&2 2>&3)
+if [ ! "$?" = "0" ]; then
+  exit 1
+fi
+
+pkg=""
+aurpkg=""
+module=$im
+daemon=""
+help=""
+case $im in
+  fcitx5)
+    pkg="fcitx5 fcitx5-hangul fcitx5-gtk fcitx5-qt fcitx5-configtool"
+    module=fcitx
+    daemon="fcitx5 -d"
+    help="Configure with fcitx5-configtool."
+  ;;
+  ibus)
+    pkg="ibus ibus-hangul"
+    daemon="ibus-daemon -rxRd"
+    help="Run ibus-setup and add Korean - Hangul in Input Method."
+  ;;
+  kime)
+    aurpkg="kime-bin"
+    daemon="kime"
+    help="Configure with ~/.config/kime/config.yaml (see https://github.com/Riey/kime)."
+  ;;
+  nimf)
+    aurpkg="nimf"
+    daemon="nimf"
+    help="Configure with nimf-settings."
+  ;;
+  uim)
+    aurpkg="uim"
+    daemon="uim-xim"
+    help="Run uim-pref-gtk or uim-pref-qt5 and select byeoru as default input method."
+  ;;
+esac
+
+if [ ! "$aurpkg" = "" ]&&[ "$(getaurhelper)" = "" ]; then
+  dialog --backtitle "$apptitle" --title "Korean Input Method :" --msgbox "$im is in the AUR.\n\nInstall an AUR helper (paru, yay or trizen) in the Updates menu first." 0 0
+  exit 1
+fi
+
+# fcitx5 starts with an english layout only, set a system wide default with hangul
+fcitxkey=""
+if [ "$im" = "fcitx5" ]; then
+  options=()
+  options+=("Hangul" "Hangul key (korean keyboard)")
+  options+=("Alt_R" "Right Alt")
+  options+=("Shift+space" "Shift + Space")
+  options+=("Control+space" "Ctrl + Space")
+  fcitxkey=$(dialog --backtitle "$apptitle" --title "Fcitx 5 :" --cancel-button "Back" --menu "Key to switch between english and hangul :" 0 0 0 \
+    "${options[@]}" \
+    3>&1 1>&2 2>&3)
+  if [ ! "$?" = "0" ]; then
+    exit 1
+  fi
+fi
+
+if [ ! "$(pacman -Qq noto-fonts-cjk 2>/dev/null)" ]; then
+  if (confirm "Korean characters need a CJK font.\n\nInstall noto-fonts-cjk ?") then
+    pkg="$pkg noto-fonts-cjk"
+  fi
+fi
+
+instpkg "$pkg" "$aurpkg"
+
+clear
+cleanim
+
+# Plasma Wayland starts fcitx5 / ibus itself (Virtual Keyboard setting), Qt uses the wayland protocol first
+envvars=()
+if [ "$session" = "plasma-wayland" ]&&{ [ "$im" = "fcitx5" ]||[ "$im" = "ibus" ]; }; then
+  envvars+=("XMODIFIERS=@im=$module")
+  envvars+=("QT_IM_MODULES=\"wayland;$module\"")
+else
+  envvars+=("GTK_IM_MODULE=$module")
+  envvars+=("QT_IM_MODULE=$module")
+  envvars+=("XMODIFIERS=@im=$module")
+  if [ "$im" = "fcitx5" ]||[ "$im" = "ibus" ]; then
+    envvars+=("SDL_IM_MODULE=$module")
+  fi
+fi
+echo "$envfile :"
+echo "$blockbegin" >> $envfile
+for var in "${envvars[@]}"; do
+  echo "  $var"
+  echo "$var" >> $envfile
+done
+echo "$blockend" >> $envfile
+
+# Start the daemon at login when the package does not ship an autostart file
+if [ ! "$session" = "plasma-wayland" ]||{ [ ! "$im" = "fcitx5" ]&&[ ! "$im" = "ibus" ]; }; then
+  daemonbin=${daemon%% *}
+  if ! grep -qs "^Exec=\(/usr/bin/\)\?$daemonbin\b" $xdgdir/autostart/*.desktop; then
+    echo ""
+    echo "$autostart :"
+    echo "  Exec=$daemon"
+    mkdir -p $xdgdir/autostart
+    {
+      echo "[Desktop Entry]"
+      echo "Type=Application"
+      echo "Name=Input Method ($im)"
+      echo "Exec=$daemon"
+      echo "NoDisplay=true"
+      if [ "$im" = "ibus" ]; then
+        # GNOME starts ibus itself
+        echo "NotShowIn=GNOME;"
+      fi
+    } > $autostart
+  fi
+fi
+
+if [ "$im" = "fcitx5" ]; then
+  echo ""
+  echo "$xdgdir/fcitx5/profile, $xdgdir/fcitx5/config :"
+  echo "  keyboard-us + hangul, switch with $fcitxkey"
+  mkdir -p $xdgdir/fcitx5
+  for file in profile config; do
+    if [ -f $xdgdir/fcitx5/$file ]&&[ ! -f $xdgdir/fcitx5/$file.archdi.bak ]; then
+      cp $xdgdir/fcitx5/$file $xdgdir/fcitx5/$file.archdi.bak
+    fi
+  done
+  cat << EOF > $xdgdir/fcitx5/profile
+[Groups/0]
+Name=Default
+Default Layout=us
+DefaultIM=hangul
+
+[Groups/0/Items/0]
+Name=keyboard-us
+Layout=
+
+[Groups/0/Items/1]
+Name=hangul
+Layout=
+
+[GroupOrder]
+0=Default
+EOF
+  cat << EOF > $xdgdir/fcitx5/config
+[Hotkey]
+EnumerateWithTriggerKeys=True
+
+[Hotkey/TriggerKeys]
+0=$fcitxkey
+EOF
+  if [ ! "$fcitxkey" = "Control+space" ]; then
+    echo "1=Control+space" >> $xdgdir/fcitx5/config
+  fi
+fi
+
+# Other input methods still installed would also start at login (fcitx5 ships its own autostart)
+for other in fcitx5 ibus kime-bin nimf uim; do
+  if [ ! "$other" = "$im" ]&&[ ! "$other" = "$aurpkg" ]&&[ "$(pacman -Qq $other 2>/dev/null)" ]; then
+    echo ""
+    echo "$other is still installed, remove it if you don't use it : pacman -Rns $other"
+  fi
+done
+
+echo ""
+echo "$im is configured, log out and log in again to use it."
+if [ "$session" = "plasma-wayland" ]; then
+  case $im in
+    fcitx5) echo "Plasma : System Settings > Keyboard > Virtual Keyboard, select Fcitx 5.";;
+    ibus) echo "Plasma : System Settings > Keyboard > Virtual Keyboard, select IBus Wayland.";;
+  esac
+fi
+echo "$help"
+pressanykey
+
+exit 0
