@@ -11,6 +11,8 @@ done
 # The mate group has no terminal, it is in mate-extra
 if [ "$package" = "mate" ]; then
   options+=("mate-terminal" "Terminal" on)
+  # MATE is X11, the Wayland session runs it in wayfire
+  options+=("mate-wayland-session" "(AUR) Wayland session in wayfire (experimental)" off)
 fi
 
 sel=$(dialog --backtitle "$apptitle" --title "$package Install :" --cancel-button "Back" --checklist "" 0 0 0 \
@@ -22,7 +24,10 @@ if [ ! "$?" = "0" ]; then
 fi
 
 for itm in $sel; do
-  pkg="$pkg $(echo $itm | sed 's/"//g')"
+  case $itm in
+    "mate-wayland-session") aurpkg="$aurpkg $(echo $itm | sed 's/"//g')";;
+    *) pkg="$pkg $(echo $itm | sed 's/"//g')";;
+  esac
 done
 
 instpkg "$pkg" "$aurpkg" || exit 1

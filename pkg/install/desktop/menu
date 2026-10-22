@@ -3,19 +3,19 @@
 
 options=()
 options+=("Plasma" "KDE Plasma 6 (Wayland)")
-options+=("XFCE4" "Lightweight GTK desktop (X11)")
+options+=("XFCE4" "Lightweight GTK desktop (X11, Wayland optional)")
 options+=("Gnome" "GNOME (Wayland)")
-options+=("Cinnamon" "Traditional GTK desktop")
+options+=("Cinnamon" "Traditional GTK desktop (X11, Wayland experimental)")
 options+=("COSMIC" "Desktop by System76 (Wayland)")
 options+=("Hyprland" "Tiling compositor (Wayland)")
 options+=("Sway" "i3-like tiling compositor (Wayland)")
 options+=("niri" "Scrollable tiling compositor (Wayland)")
-options+=("LXDE" "Very light GTK desktop (X11)")
-options+=("LXQt" "Lightweight Qt desktop")
-options+=("Mate" "GNOME 2 style desktop (X11)")
-options+=("Enlightenment" "EFL desktop")
-options+=("Openbox" "Minimal window manager (X11)")
-options+=("Deepin" "Deepin desktop")
+options+=("LXDE" "Very light GTK desktop (X11 only)")
+options+=("LXQt" "Lightweight Qt desktop (X11, Wayland optional)")
+options+=("Mate" "GNOME 2 style desktop (X11, Wayland optional)")
+options+=("Enlightenment" "EFL desktop (X11, Wayland experimental)")
+options+=("Openbox" "Minimal window manager (X11, labwc optional)")
+options+=("Deepin" "Deepin desktop (X11, Wayland treeland)")
 
 defaultitem=""
 sel=$(dialog --backtitle "$apptitle" --title "Install Desktop Menu :" --default-item "$defaultitem" --cancel-button "Back" --menu "Choose a desktop" 0 0 0 \

@@ -11,6 +11,9 @@ for item in $items; do
   esac
 done
 options+=("xterm" "Terminal" on)
+# Openbox is X11 only, labwc is the Openbox like Wayland compositor (reads Openbox themes)
+options+=("labwc" "Wayland session, Openbox like compositor" off)
+options+=("xorg-xwayland" "X11 apps in the Wayland session" off)
 
 sel=$(dialog --backtitle "$apptitle" --title "Openbox Install :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \
