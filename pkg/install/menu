@@ -7,7 +7,7 @@ options+=("System" "")
 options+=("Graphics" "Xorg, Xwayland, drivers, fonts")
 options+=("Desktop Environment" "")
 options+=("Display Manager" "")
-options+=("Input Method" "Korean (fcitx5, ibus, kime, nimf, uim)")
+options+=("Input Method" "Korean (kime, fcitx5, ibus, nimf, uim)")
 options+=("Applications" "")
 
 defaultitem=""

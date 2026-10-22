@@ -10,9 +10,9 @@ blockbegin="# archdi input method begin"
 blockend="# archdi input method end"
 
 options=()
-options+=("fcitx5" "Fcitx 5 + fcitx5-hangul (recommended)")
+options+=("kime" "(AUR) Korean IME written in Rust (recommended)")
+options+=("fcitx5" "Fcitx 5 + fcitx5-hangul (no AUR helper needed)")
 options+=("ibus" "IBus + ibus-hangul (GNOME default)")
-options+=("kime" "(AUR) Korean IME written in Rust")
 options+=("nimf" "(AUR) Nimf input method framework")
 options+=("uim" "(AUR) uim with byeoru, orphaned package")
 options+=("" "")

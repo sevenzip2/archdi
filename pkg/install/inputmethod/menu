@@ -2,7 +2,7 @@
 . ./lib
 
 options=()
-options+=("Input Method" "fcitx5, ibus, kime, nimf, uim")
+options+=("Input Method" "kime, fcitx5, ibus, nimf, uim")
 options+=("Korean Fonts" "")
 
 defaultitem=""
