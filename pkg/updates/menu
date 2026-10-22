@@ -66,32 +66,6 @@ if [ ! "$?" = "0" ]; then
   exit 1
 fi
 
-checkaurdependencies(){
-  if [ ! -f /usr/bin/automake ]; then
-    pacman -S --needed base-devel
-  fi
-  if [ ! -f /usr/bin/git ]; then
-    pacman -S --needed git
-  fi
-  if [ ! $(id -u "aurbuilder") ]; then
-    newpass=$(< /dev/urandom tr -dc "@#*%&_A-Z-a-z-0-9" | head -c16)
-    useradd -r -N -M -d /tmp/aurbuilder -s /usr/bin/nologin aurbuilder
-    echo -e "$newpass\n$newpass\n"|passwd aurbuilder
-    newpass=""
-    mkdir /tmp/aurbuilder 1&>/dev/null
-    chmod 777 /tmp/aurbuilder
-  else
-    mkdir /tmp/aurbuilder 1&>/dev/null
-    chmod 777 /tmp/aurbuilder
-    usermod -d /tmp/aurbuilder aurbuilder
-  fi
-  # aurbuilder only needs pacman (makepkg -si, AUR helpers), not a full root shell
-  aurbuildersudoers="aurbuilder ALL=(ALL) NOPASSWD: /usr/bin/pacman\nroot ALL=(aurbuilder) NOPASSWD: ALL"
-  if [ ! "$(cat /etc/sudoers.d/aurbuilder 2>/dev/null)" = "$(echo -e "$aurbuildersudoers")" ]; then
-    writesudoers aurbuilder "$aurbuildersudoers"
-  fi
-}
-
 clear
 case $sel in
   'Latest News')
@@ -110,16 +84,13 @@ case $sel in
   ;;
   'Upgrade') pacman -Syu;;
   'Upgrade with paru')
-    checkaurdependencies
-    sudo -u aurbuilder paru -Syu
+    aurrun paru -Syu
   ;;
   'Upgrade with trizen')
-    checkaurdependencies
-    sudo -u aurbuilder trizen -Syu
+    aurrun trizen -Syu
   ;;
   'Upgrade with yay')
-    checkaurdependencies
-    sudo -u aurbuilder yay -Syu
+    aurrun yay -Syu
   ;;
   'Clean orphan') pacman -Rns $(pacman -Qqtd);;
   'Clean cache') pacman -Sc;;
@@ -141,7 +112,7 @@ case $sel in
             gpgkey=$(dialog --backtitle "$apptitle" --title "Add GPG key" --inputbox "Enter the GPG key :" 0 0 3>&1 1>&2 2>&3)
             if [ "$?" = "0" ]; then
               echo "sudo -u aurbuilder gpg --keyserver "$gpgserver" --recv-keys "$gpgkey
-              sudo -u aurbuilder gpg --keyserver $gpgserver --recv-keys $gpgkey
+              aurrun gpg --keyserver $gpgserver --recv-keys $gpgkey
               pressanykey
             fi
           fi
@@ -151,7 +122,7 @@ case $sel in
           gpgkey=$(dialog --backtitle "$apptitle" --title "Add GPG key" --inputbox "Enter the GPG key :" 0 0 3>&1 1>&2 2>&3)
           if [ "$?" = "0" ]; then
             echo "sudo -u aurbuilder gpg --keyserver "$gpgserver" --recv-keys "$gpgkey
-            sudo -u aurbuilder gpg --keyserver $gpgserver --recv-keys $gpgkey
+            aurrun gpg --keyserver $gpgserver --recv-keys $gpgkey
             pressanykey
           fi
         ;;
@@ -168,31 +139,19 @@ case $sel in
   'Install paru')
     if(confirm "Paru allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall paru (paru-bin) ?") then
       clear
-      checkaurdependencies
-      cd /tmp/aurbuilder
-      sudo -u aurbuilder git clone https://aur.archlinux.org/paru-bin.git
-      cd paru-bin
-      sudo -u aurbuilder makepkg -si
+      aurrun sh -c "rm -rf paru-bin && git clone https://aur.archlinux.org/paru-bin.git && cd paru-bin && makepkg -si"
     fi
   ;;
   'Install trizen')
     if(confirm "Trizen allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall trizen ?") then
       clear
-      checkaurdependencies
-      cd /tmp/aurbuilder
-      sudo -u aurbuilder git clone https://aur.archlinux.org/trizen.git
-      cd trizen
-      sudo -u aurbuilder makepkg -si
+      aurrun sh -c "rm -rf trizen && git clone https://aur.archlinux.org/trizen.git && cd trizen && makepkg -si"
     fi
   ;;
   'Install yay')
     if(confirm "Yay allow you to access the AUR applications.\nBecause is not possible to compile applications as root,\nthis installer create an aurbuilder user.\n\nInstall yay ?") then
       clear
-      checkaurdependencies
-      cd /tmp/aurbuilder
-      sudo -u aurbuilder git clone https://aur.archlinux.org/yay.git
-      cd yay
-      sudo -u aurbuilder makepkg -si
+      aurrun sh -c "rm -rf yay && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si"
     fi
   ;;
   'Install pkgstats')

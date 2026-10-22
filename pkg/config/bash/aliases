@@ -26,15 +26,6 @@ options+=("vdir" "vdir --color=auto" on)
 options+=("watch" "watch --color" on)
 options+=("man" "color function" on)
 options+=("mkdir" "mkdir -pv" off)
-if [ -f /usr/bin/paru ]; then
-  options+=("paru" "sudo -u aurbuilder paru" on)
-fi
-if [ -f /usr/bin/trizen ]; then
-  options+=("trizen" "sudo -u aurbuilder trizen" on)
-fi
-if [ -f /usr/bin/yay ]; then
-  options+=("yay" "sudo -u aurbuilder yay" on)
-fi
 
 sel=$(dialog --backtitle "$apptitle" --title "Aliases in /etc/profile.d/alias.sh :" --cancel-button "Back" --checklist "" 0 0 0 \
   "${options[@]}" \
@@ -84,9 +75,6 @@ for itm in $sel; do
       echo '}' >> /etc/profile.d/alias.sh
     ;;
     "mkdir") echo "alias mkdir='mkdir -pv'" >> /etc/profile.d/alias.sh;;
-    "paru") echo "alias paru='sudo -u aurbuilder paru'" >> /etc/profile.d/alias.sh;;
-    "trizen") echo "alias trizen='sudo -u aurbuilder trizen'" >> /etc/profile.d/alias.sh;;
-    "yay") echo "alias yay='sudo -u aurbuilder yay'" >> /etc/profile.d/alias.sh;;
   esac
 done
 

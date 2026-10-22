@@ -62,6 +62,39 @@ getaurhelper(){
 }
 
 
+# AUR packages are built by the aurbuilder system account (makepkg refuses to run as root),
+# in a private home. It gets passwordless pacman only while an AUR command runs (aurrun):
+# pacman installs packages as root, so a permanent rule would be a permanent root access.
+aurbuilderdir=/var/lib/aurbuilder
+
+setupaurbuilder(){
+  if [ ! -f /usr/bin/makepkg ]||[ ! -f /usr/bin/automake ]||[ ! -f /usr/bin/git ]; then
+    pacman -S --needed --noconfirm base-devel git
+  fi
+  if ! id -u aurbuilder &>/dev/null; then
+    useradd -r -N -d $aurbuilderdir -s /usr/bin/nologin aurbuilder
+  fi
+  # Older archdi versions used a world writable /tmp/aurbuilder home
+  usermod -d $aurbuilderdir aurbuilder 2>/dev/null
+  mkdir -p $aurbuilderdir
+  chown aurbuilder: $aurbuilderdir
+  chmod 700 $aurbuilderdir
+  rm -f /etc/sudoers.d/aurbuilder
+}
+
+# $@ : command run as aurbuilder in its home, with sudo pacman allowed until it ends
+aurrun(){
+  setupaurbuilder
+  writesudoers aurbuilder "aurbuilder ALL=(ALL) NOPASSWD: /usr/bin/pacman" || return 1
+  trap 'rm -f /etc/sudoers.d/aurbuilder' EXIT INT TERM
+  (cd $aurbuilderdir && sudo -u aurbuilder "$@")
+  aurresult=$?
+  rm -f /etc/sudoers.d/aurbuilder
+  trap - EXIT INT TERM
+  return $aurresult
+}
+
+
 # $1: pacman packages
 # Many packages (ffmpeg...) need libjack.so, provided by jack2 or pipewire-jack which conflict.
 # pacman picks jack2 by default and installing PipeWire later fails, so prefer pipewire-jack.
@@ -106,7 +139,7 @@ instpkg(){
     else
       clear
       echo "# sudo -u aurbuilder $aurhelper -S --needed $2"
-      sudo -u aurbuilder $aurhelper -S --needed $2
+      aurrun $aurhelper -S --needed $2
       pressanykey
     fi
   fi
@@ -151,7 +184,9 @@ chooseaurpkg(){
   options=()
   aurhelper=$(getaurhelper)
   if [ ! "$aurhelper" = "" ]; then
-    items=$($aurhelper -Ssq $1)
+    # Searching needs no pacman rights, AUR helpers refuse to run as root
+    setupaurbuilder
+    items=$(cd $aurbuilderdir && sudo -u aurbuilder $aurhelper -Ssq $1)
   fi
   for item in $items; do
     options+=("$item" "" off)
@@ -400,6 +435,9 @@ svcdisable(){
 }
 
 
+
+# Permanent rule left by older archdi versions
+rm -f /etc/sudoers.d/aurbuilder 2>/dev/null
 
 while (( "$#" )); do
   case $1 in
