@@ -41,7 +41,9 @@ fi
 
 options=()
 options+=("plasma-wayland" "KDE Plasma (Wayland)")
-options+=("other" "GNOME, Xorg sessions, Hyprland, Sway, niri, COSMIC...")
+options+=("gnome-wayland" "GNOME (Wayland)")
+options+=("wlroots" "Hyprland, Sway, niri (Wayland)")
+options+=("x11" "Xorg sessions and other desktops")
 session=$(dialog --backtitle "$apptitle" --title "Desktop session :" --cancel-button "Back" --menu "Where will you use $im ?" 0 0 0 \
   "${options[@]}" \
   3>&1 1>&2 2>&3)
@@ -115,29 +117,63 @@ instpkg "$pkg" "$aurpkg"
 clear
 cleanim
 
-# Plasma Wayland starts fcitx5 / ibus itself (Virtual Keyboard setting), Qt uses the wayland protocol first
+# On Wayland, GTK3/4 and Qt6 talk to fcitx5/ibus through the text-input protocol and need no
+# variable, XMODIFIERS is still used by Xwayland (XIM) apps and QT_IM_MODULE by Qt5 apps.
+# kime, nimf and uim rely on their GTK/Qt modules in every session.
 envvars=()
-if [ "$session" = "plasma-wayland" ]&&{ [ "$im" = "fcitx5" ]||[ "$im" = "ibus" ]; }; then
-  envvars+=("XMODIFIERS=@im=$module")
-  envvars+=("QT_IM_MODULES=\"wayland;$module\"")
+if [ "$im" = "fcitx5" ]||[ "$im" = "ibus" ]; then
+  case $session in
+    plasma-wayland)
+      envvars+=("XMODIFIERS=@im=$module")
+      envvars+=("QT_IM_MODULES=\"wayland;$module\"")
+    ;;
+    gnome-wayland)
+      # GNOME integrates ibus itself, other input methods need the GTK/Qt modules
+      if [ "$im" = "fcitx5" ]; then
+        envvars+=("GTK_IM_MODULE=$module")
+        envvars+=("QT_IM_MODULE=$module")
+        envvars+=("XMODIFIERS=@im=$module")
+      fi
+    ;;
+    wlroots)
+      envvars+=("XMODIFIERS=@im=$module")
+      envvars+=("QT_IM_MODULE=$module")
+      envvars+=("QT_IM_MODULES=\"wayland;$module\"")
+    ;;
+    x11)
+      envvars+=("GTK_IM_MODULE=$module")
+      envvars+=("QT_IM_MODULE=$module")
+      envvars+=("XMODIFIERS=@im=$module")
+      envvars+=("SDL_IM_MODULE=$module")
+    ;;
+  esac
 else
   envvars+=("GTK_IM_MODULE=$module")
   envvars+=("QT_IM_MODULE=$module")
   envvars+=("XMODIFIERS=@im=$module")
-  if [ "$im" = "fcitx5" ]||[ "$im" = "ibus" ]; then
-    envvars+=("SDL_IM_MODULE=$module")
-  fi
 fi
 echo "$envfile :"
-echo "$blockbegin" >> $envfile
-for var in "${envvars[@]}"; do
-  echo "  $var"
-  echo "$var" >> $envfile
-done
-echo "$blockend" >> $envfile
+if [ "${#envvars[@]}" = "0" ]; then
+  echo "  no variable needed"
+else
+  echo "$blockbegin" >> $envfile
+  for var in "${envvars[@]}"; do
+    echo "  $var"
+    echo "$var" >> $envfile
+  done
+  echo "$blockend" >> $envfile
+fi
 
-# Start the daemon at login when the package does not ship an autostart file
-if [ ! "$session" = "plasma-wayland" ]||{ [ ! "$im" = "fcitx5" ]&&[ ! "$im" = "ibus" ]; }; then
+# Plasma (Virtual Keyboard setting) and GNOME (ibus) start the input method themselves,
+# otherwise start the daemon at login when the package does not ship an autostart file
+needautostart=1
+if [ "$session" = "plasma-wayland" ]&&{ [ "$im" = "fcitx5" ]||[ "$im" = "ibus" ]; }; then
+  needautostart=0
+fi
+if [ "$session" = "gnome-wayland" ]&&[ "$im" = "ibus" ]; then
+  needautostart=0
+fi
+if [ "$needautostart" = "1" ]; then
   daemonbin=${daemon%% *}
   if ! grep -qs "^Exec=\(/usr/bin/\)\?$daemonbin\b" $xdgdir/autostart/*.desktop; then
     echo ""
@@ -207,11 +243,30 @@ done
 
 echo ""
 echo "$im is configured, log out and log in again to use it."
-if [ "$session" = "plasma-wayland" ]; then
-  case $im in
-    fcitx5) echo "Plasma : System Settings > Keyboard > Virtual Keyboard, select Fcitx 5.";;
-    ibus) echo "Plasma : System Settings > Keyboard > Virtual Keyboard, select IBus Wayland.";;
-  esac
+case $session in
+  plasma-wayland)
+    case $im in
+      fcitx5) echo "Plasma : System Settings > Keyboard > Virtual Keyboard, select Fcitx 5.";;
+      ibus) echo "Plasma : System Settings > Keyboard > Virtual Keyboard, select IBus Wayland.";;
+    esac
+  ;;
+  gnome-wayland)
+    case $im in
+      ibus) echo "GNOME : Settings > Keyboard > Input Sources, add Korean (Hangul).";;
+      fcitx5) echo "GNOME : install the \"Input Method Panel\" (kimpanel) shell extension to see the candidate window.";;
+    esac
+  ;;
+  wlroots)
+    # Compositors do not run xdg autostart files unless started with uwsm or dex
+    niriargs=$(for word in $daemon; do printf ' "%s"' "$word"; done)
+    echo "Start $im from your compositor config if it does not run xdg autostart files :"
+    echo "  Hyprland : exec-once = $daemon"
+    echo "  Sway     : exec $daemon"
+    echo "  niri     : spawn-at-startup$niriargs"
+  ;;
+esac
+if [ ! "$session" = "x11" ]; then
+  echo "Electron apps (VS Code, Discord...) on Wayland need --enable-wayland-ime."
 fi
 echo "$help"
 pressanykey
